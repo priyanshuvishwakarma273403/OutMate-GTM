@@ -1,0 +1,19 @@
+services:
+  outmate-gtm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: outmate_gtm_app
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - LOG_LEVEL=INFO
+      - OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
+      - MCP_TRANSPORT=sse
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
