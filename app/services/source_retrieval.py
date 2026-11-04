@@ -101,8 +101,23 @@ class SourceRetrievalService:
                 raise SSRFSecurityError(f"Malformed IP address '{ip_str}' resolved: {exc}") from exc
 
             # Check for IPv4-mapped IPv6 addresses (e.g. ::ffff:127.0.0.1)
-            if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
-                ip = ip.ipv4_mapped
+            if isinstance(ip, ipaddress.IPv6Address):
+                if ip.ipv4_mapped:
+                    ip = ip.ipv4_mapped
+                elif ip in ipaddress.ip_network("64:ff9b::/96"):
+                    # Unwrap RFC 6052 Well-Known NAT64 Prefix to inspect embedded IPv4 target
+                    embedded_v4 = ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)
+                    if (
+                        embedded_v4.is_private
+                        or embedded_v4.is_loopback
+                        or embedded_v4.is_link_local
+                        or embedded_v4.is_reserved
+                        or embedded_v4.is_unspecified
+                    ):
+                        raise SSRFSecurityError(
+                            f"Disallowed embedded NAT64 IP destination '{embedded_v4}' resolved for '{hostname}'"
+                        )
+                    continue  # Safe public translated address
 
             if (
                 ip.is_private
