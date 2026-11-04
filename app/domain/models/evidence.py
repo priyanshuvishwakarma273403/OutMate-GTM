@@ -30,6 +30,10 @@ class VerificationStatus(StrEnum):
     """Status indicating corroboration level of evidence."""
 
     VERIFIED = "verified"
+    PARTIALLY_VERIFIED = "partially_verified"
+    NOT_VERIFIED = "not_verified"
+    CONFLICTING = "conflicting"
+    UNAVAILABLE = "unavailable"
     UNVERIFIED = "unverified"
     DISPUTED = "disputed"
     OBSOLETE = "obsolete"
@@ -43,9 +47,13 @@ class EvidenceRecord(BaseModel):
         default=EvidenceSourceType.OTHER, description="Classification of the data source"
     )
     title: str | None = Field(default=None, description="Title of the source page or document")
+    claim: str | None = Field(default=None, description="Factual claim or attribute corroborated")
     snippet: str = Field(..., description="Exact textual excerpt supporting the finding")
     captured_at: datetime = Field(
         default_factory=utc_now, description="Timestamp when evidence was retrieved"
+    )
+    publication_date: datetime | None = Field(
+        default=None, description="Discovered original publication date"
     )
     confidence: float = Field(
         default=0.7,

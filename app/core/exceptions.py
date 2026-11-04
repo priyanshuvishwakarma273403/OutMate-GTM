@@ -85,6 +85,22 @@ class SearchProviderError(IntegrationError):
     """Raised when external public search providers fail or return invalid data."""
 
 
+class SearchTimeoutError(SearchProviderError):
+    """Raised when external public search request exceeds configured timeout."""
+
+
+class SearchQuotaExceededError(SearchProviderError):
+    """Raised when search provider rate limits or monthly quotas are exceeded."""
+
+
+class SearchAuthenticationError(SearchProviderError):
+    """Raised when search provider API credentials are invalid or rejected."""
+
+
+class SSRFSecurityError(OutmateError):
+    """Raised when an outbound URL violates SSRF safety rules (e.g. private IP or blocked scheme)."""
+
+
 # Service & Domain Errors
 class ServiceError(OutmateError):
     """Base exception for business service failures."""

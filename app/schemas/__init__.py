@@ -2,22 +2,32 @@
 
 from app.schemas.requests import (
     CompanyLookupRequest,
+    CompanyPreviewRequest,
+    CompanyResearchRequest,
     LLMTestRequest,
     ResearchQueryRequest,
 )
 from app.schemas.responses import (
     APIResponse,
+    CompanyPreviewResponse,
+    CompanyResearchReport,
     DependencyHealth,
     ErrorDetail,
     ErrorResponse,
     HealthResponse,
     LLMTestResponse,
     ReadinessResponse,
+    SourceMetadata,
+    SourceSummary,
 )
 
 __all__ = [
     "APIResponse",
     "CompanyLookupRequest",
+    "CompanyPreviewRequest",
+    "CompanyPreviewResponse",
+    "CompanyResearchReport",
+    "CompanyResearchRequest",
     "DependencyHealth",
     "ErrorDetail",
     "ErrorResponse",
@@ -26,4 +36,6 @@ __all__ = [
     "LLMTestResponse",
     "ReadinessResponse",
     "ResearchQueryRequest",
+    "SourceMetadata",
+    "SourceSummary",
 ]

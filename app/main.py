@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.routes.health import router as health_router
 from app.api.routes.llm import router as llm_router
+from app.api.routes.research import router as research_router
 from app.core.config import get_settings
 from app.core.exceptions import OutmateError
 from app.core.logging import get_logger, setup_logging
@@ -121,6 +122,7 @@ def create_app() -> FastAPI:
     # Register API routes
     app.include_router(health_router)
     app.include_router(llm_router)
+    app.include_router(research_router)
 
     # Mount Streamable MCP Server Starlette App for Remote Claude.ai integration
     mcp_server = OutmateMCPServer(settings=settings)

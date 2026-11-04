@@ -68,3 +68,37 @@ class LLMTestRequest(BaseModel):
         default=None,
         description="Optional model override; defaults to OPENROUTER_MODEL",
     )
+
+
+class CompanyResearchRequest(BaseModel):
+    """Request payload for executing deep real company research."""
+
+    company_name: str = Field(
+        ...,
+        min_length=2,
+        max_length=200,
+        examples=["Vercel"],
+        description="Name of the company to research",
+    )
+    website_domain: str | None = Field(
+        default=None,
+        examples=["vercel.com"],
+        description="Optional corporate domain to eliminate ambiguity",
+    )
+    research_depth: str = Field(
+        default="standard",
+        description="Research breadth and search intensity: 'standard' or 'deep'",
+    )
+    requested_fields: list[str] = Field(
+        default_factory=list,
+        description="Optional specific corporate fields to prioritize (e.g. ['tech_stack', 'headcount'])",
+    )
+
+
+class CompanyPreviewRequest(BaseModel):
+    """Request payload for previewing company identity resolution and research query plan."""
+
+    company_name: str = Field(..., min_length=2, max_length=200, description="Target company name")
+    website_domain: str | None = Field(
+        default=None, description="Optional corporate domain to evaluate"
+    )

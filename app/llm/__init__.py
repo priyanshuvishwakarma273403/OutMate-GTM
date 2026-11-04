@@ -11,13 +11,11 @@ from app.llm.base import (
     ToolDefinition,
 )
 from app.llm.openrouter import OpenRouterClient
-from app.services.llm import LLMService
 
 __all__ = [
     "BaseLLMClient",
     "LLMMessage",
     "LLMResponse",
-    "LLMService",
     "MessageRole",
     "OpenRouterClient",
     "StructuredLLMResponse",
