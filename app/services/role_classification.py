@@ -64,7 +64,7 @@ class RoleClassificationService:
     DEPARTMENT_PATTERNS = [
         (
             re.compile(
-                r"\b(engineering|infrastructure|platform|software|technology|architect|devops|sre|systems)\b",
+                r"\b(engineering|infrastructure|platform|software|technology|technical|architect|devops|sre|systems|cto|cio)\b",
                 re.IGNORECASE,
             ),
             Department.ENGINEERING,
@@ -88,7 +88,7 @@ class RoleClassificationService:
         ),
         (
             re.compile(
-                r"\b(finance|accounting|cfo|treasury|controller|investor relations)\b",
+                r"\b(finance|financial|accounting|cfo|treasury|controller|investor relations)\b",
                 re.IGNORECASE,
             ),
             Department.FINANCE,

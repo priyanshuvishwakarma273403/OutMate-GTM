@@ -13,7 +13,7 @@ class PersonIdentityResolutionService:
         re.IGNORECASE,
     )
     CREDENTIALS_REGEX = re.compile(
-        r"[,;\s]+(ph\.?d|m\.?b\.?a|m\.?d|cpa|pmp|esq)\b",
+        r"[,;\s]+(ph\.?d\.?|m\.?b\.?a\.?|m\.?d\.?|cpa|pmp|esq\.?)(?=[,;\s]|$)",
         re.IGNORECASE,
     )
 
@@ -24,6 +24,7 @@ class PersonIdentityResolutionService:
         name = self.HONORIFICS_REGEX.sub("", raw_name.strip())
         name = self.CREDENTIALS_REGEX.sub("", name)
         name = re.sub(r"[,;]+", "", name)
+        name = name.strip(" .,;:-")
         return re.sub(r"\s+", " ", name).strip()
 
     def deduplicate_candidates(
