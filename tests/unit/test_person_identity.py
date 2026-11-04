@@ -34,9 +34,8 @@ def _create_candidate(
         evidence=[
             EvidenceRecord(
                 source_url=source_url,
-                source_type=EvidenceSourceType.FIRST_PARTY_TEAM_PAGE,
-                retrieved_at=datetime.now(UTC),
-                content_snippet=f"{full_name} is {title} at {company}",
+                source_type=EvidenceSourceType.OFFICIAL_WEBSITE,
+                snippet=f"{full_name} is {title} at {company}",
                 confidence=0.9,
             )
         ],

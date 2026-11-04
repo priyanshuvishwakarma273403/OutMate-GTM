@@ -38,7 +38,7 @@ class DecisionInfluenceAssessmentService:
         ):
             influence = DecisionInfluenceCategory.PROCUREMENT_STAKEHOLDER
             reasoning_parts.append(
-                "Holds direct responsibility for commercial vendor review, contract negotiations, and purchasing workflows."
+                "Holds direct responsibility for procurement, commercial vendor review, contract negotiations, and purchasing workflows."
             )
             responsibilities.append("Vendor evaluation and procurement contracting")
 
