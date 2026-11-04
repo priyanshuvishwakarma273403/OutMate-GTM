@@ -1,5 +1,6 @@
 """Domain models representing discovered decision-makers and business prospects."""
 
+import uuid
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -7,6 +8,11 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from app.domain.models.evidence import EvidenceRecord, VerificationStatus, utc_now
+
+
+def generate_person_id() -> str:
+    """Generate a unique identifier for a decision-maker entity."""
+    return f"dm_{uuid.uuid4().hex[:12]}"
 
 
 class SeniorityLevel(StrEnum):
@@ -37,12 +43,73 @@ class Department(StrEnum):
     OTHER = "other"
 
 
+class EmploymentStatus(StrEnum):
+    """Corroborated current employment state of a prospect."""
+
+    CURRENT_EMPLOYMENT_VERIFIED = "current_employment_verified"
+    CURRENT_EMPLOYMENT_PARTIALLY_VERIFIED = "current_employment_partially_verified"
+    HISTORICAL_EMPLOYMENT = "historical_employment"
+    EMPLOYMENT_NOT_VERIFIED = "employment_not_verified"
+    CONFLICTING_EMPLOYMENT_EVIDENCE = "conflicting_employment_evidence"
+    IDENTITY_AMBIGUOUS = "identity_ambiguous"
+
+
+class DecisionInfluenceCategory(StrEnum):
+    """Buying persona and purchasing influence classifications."""
+
+    ECONOMIC_BUYER = "economic_buyer"
+    TECHNICAL_DECISION_MAKER = "technical_decision_maker"
+    BUSINESS_DECISION_MAKER = "business_decision_maker"
+    CHAMPION = "champion"
+    INFLUENCER = "influencer"
+    EVALUATOR = "evaluator"
+    PROCUREMENT_STAKEHOLDER = "procurement_stakeholder"
+    EXECUTIVE_SPONSOR = "executive_sponsor"
+    UNKNOWN = "unknown"
+
+
+class RoleCategory(StrEnum):
+    """High-level taxonomy category for GTM prospect roles."""
+
+    EXECUTIVE = "executive"
+    TECHNOLOGY = "technology"
+    PROCUREMENT_FINANCE = "procurement_finance"
+    PRODUCT_BUSINESS = "product_business"
+    OTHER = "other"
+
+
+class DecisionMakerAssessment(BaseModel):
+    """Explainable decision influence and buying power evaluation."""
+
+    person_id: str = Field(..., description="Target person identifier")
+    role_category: RoleCategory = Field(
+        default=RoleCategory.OTHER, description="Taxonomy classification"
+    )
+    decision_influence: DecisionInfluenceCategory = Field(
+        default=DecisionInfluenceCategory.UNKNOWN,
+        description="Purchasing role classification",
+    )
+    relevant_responsibilities: list[str] = Field(
+        default_factory=list, description="Publicly documented responsibilities"
+    )
+    purchasing_relevance: str = Field(
+        default="", description="Alignment with the specific purchasing scenario"
+    )
+    reasoning: str = Field(
+        default="", description="Explainable factual rationale for the assigned influence"
+    )
+    assessment_status: str = Field(default="completed", description="Assessment completion status")
+    supporting_evidence_ids: list[str] = Field(
+        default_factory=list, description="IDs of evidence records corroborating this assessment"
+    )
+
+
 class ContactCoordinates(BaseModel):
     """Contact reference data identified from public disclosures."""
 
-    email: str | None = Field(default=None, description="Public or corporate contact email")
+    email: str | None = Field(default=None, description="Public corporate contact email")
     phone: str | None = Field(default=None, description="Public corporate phone number")
-    linkedin_url: str | None = Field(default=None, description="Public LinkedIn profile URL")
+    linkedin_url: str | None = Field(default=None, description="Public professional profile URL")
     twitter_handle: str | None = Field(default=None, description="Public Twitter/X handle")
     github_username: str | None = Field(default=None, description="Public GitHub handle")
 
@@ -50,6 +117,10 @@ class ContactCoordinates(BaseModel):
 class DecisionMaker(BaseModel):
     """Core domain model representing a decision-maker prospect in a target account."""
 
+    person_id: str = Field(
+        default_factory=generate_person_id,
+        description="Stable unique identifier for this prospect",
+    )
     full_name: str = Field(..., description="Full professional name of the person")
     company_name: str = Field(
         ..., description="Target company where person is currently affiliated"
@@ -58,17 +129,39 @@ class DecisionMaker(BaseModel):
         default=None, description="Target company primary domain name"
     )
     title: str = Field(..., description="Exact discovered job title")
+    normalized_title: str | None = Field(
+        default=None, description="Clean normalized title mapped to organizational taxonomy"
+    )
     seniority: SeniorityLevel = Field(
         default=SeniorityLevel.UNKNOWN, description="Normalized seniority tier"
     )
     department: Department = Field(
         default=Department.OTHER, description="Normalized departmental role"
     )
+    employment_status: EmploymentStatus = Field(
+        default=EmploymentStatus.EMPLOYMENT_NOT_VERIFIED,
+        description="Corroborated current employment state",
+    )
     location: str | None = Field(
         default=None, description="Disclosed city, region, or remote status"
     )
+    biography: str | None = Field(
+        default=None, description="Summary of public professional background"
+    )
+    biography_url: str | None = Field(
+        default=None, description="URL of official biography or announcement"
+    )
     contact_info: ContactCoordinates = Field(
-        default_factory=ContactCoordinates, description="Discovered contact coordinates"
+        default_factory=ContactCoordinates, description="Discovered public contact coordinates"
+    )
+    assessment: DecisionMakerAssessment | None = Field(
+        default=None, description="Decision influence and purchasing relevance assessment"
+    )
+    confidence_score: float = Field(
+        default=0.0, ge=0.0, le=1.0, description="Overall evidence confidence score"
+    )
+    confidence_explanation: str = Field(
+        default="", description="Explainable breakdown of evidence backing this candidate"
     )
     verification_status: VerificationStatus = Field(
         default=VerificationStatus.UNVERIFIED, description="Current verification level"

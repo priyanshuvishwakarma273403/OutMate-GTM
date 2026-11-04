@@ -12,20 +12,25 @@ from app.services.content_extraction import (
     ContentExtractionService,
     ExtractedPageContent,
 )
+from app.services.decision_influence import DecisionInfluenceAssessmentService
+from app.services.employment_verification import EmploymentVerificationService
 from app.services.llm import LLMService
 from app.services.people_research import (
-    BasePeopleResearchService,
     PeopleResearchService,
 )
+from app.services.person_identity import PersonIdentityResolutionService
 from app.services.report_generation import (
-    BaseReportGenerationService,
     ReportGenerationService,
 )
 from app.services.report_storage import (
     InMemoryReportRepository,
     get_report_repository,
 )
-from app.services.scoring import BaseScoringService, ScoringService
+from app.services.role_classification import (
+    NormalizedRole,
+    RoleClassificationService,
+)
+from app.services.scoring import ScoringService
 from app.services.source_normalization import (
     classify_source_type,
     deduplicate_urls,
@@ -39,20 +44,22 @@ from app.services.source_retrieval import (
 from app.services.verification import VerificationService
 
 __all__ = [
-    "BasePeopleResearchService",
-    "BaseReportGenerationService",
-    "BaseScoringService",
     "CompanyIdentityResolution",
     "CompanyIdentityResolutionService",
     "CompanyResearchService",
     "ContentExtractionService",
+    "DecisionInfluenceAssessmentService",
+    "EmploymentVerificationService",
     "ExtractedPageContent",
     "IdentityResolutionStatus",
     "InMemoryReportRepository",
     "LLMService",
+    "NormalizedRole",
     "PeopleResearchService",
+    "PersonIdentityResolutionService",
     "ReportGenerationService",
     "RetrievedSource",
+    "RoleClassificationService",
     "ScoringService",
     "SourceRetrievalService",
     "VerificationService",

@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 
 from app.domain.models.company import CompanyProfile
 from app.domain.models.evidence import EvidenceRecord
+from app.domain.models.person import DecisionMaker
+from app.domain.models.report import ScoredDecisionMaker
 from app.llm.base import TokenUsage
 
 T = TypeVar("T")
@@ -169,4 +171,80 @@ class CompanyPreviewResponse(BaseModel):
     )
     candidate_domains: list[str] = Field(
         default_factory=list, description="Candidate domains discovered"
+    )
+
+
+class DiscoverySummary(BaseModel):
+    """Metrics and statistics summarizing the decision-maker discovery run."""
+
+    search_queries_executed: list[str] = Field(
+        default_factory=list, description="List of search queries dispatched"
+    )
+    sources_retrieved: int = Field(default=0, description="Total web sources retrieved")
+    candidates_discovered: int = Field(
+        default=0, description="Raw candidates identified in source text"
+    )
+    candidates_verified: int = Field(
+        default=0, description="Candidates with verified or partially verified employment"
+    )
+    candidates_excluded: int = Field(
+        default=0, description="Candidates excluded due to departure or insufficient evidence"
+    )
+    duplicate_candidates_merged: int = Field(
+        default=0, description="Count of duplicate candidate profiles merged"
+    )
+
+
+class DecisionMakerReport(BaseModel):
+    """Comprehensive evidence-backed decision-maker research dossier."""
+
+    research_id: str = Field(..., description="Unique UUID for this discovery run")
+    company_name: str = Field(..., description="Target corporate name")
+    company_domain: str = Field(..., description="Corporate primary domain")
+    people: list[DecisionMaker] = Field(
+        default_factory=list, description="Identified and verified decision-maker prospects"
+    )
+    scored_people: list[ScoredDecisionMaker] = Field(
+        default_factory=list, description="Prospects ranked by GTM purchasing relevance"
+    )
+    evidence: list[EvidenceRecord] = Field(
+        default_factory=list, description="All supporting public evidence records"
+    )
+    discovery_summary: DiscoverySummary = Field(
+        default_factory=DiscoverySummary, description="Audit metrics of the research pass"
+    )
+    limitations: list[str] = Field(
+        default_factory=list, description="Documented knowledge gaps and limitations"
+    )
+    excluded_candidates_summary: list[str] = Field(
+        default_factory=list, description="Summary of excluded historical or ambiguous candidates"
+    )
+    warnings: list[str] = Field(
+        default_factory=list, description="Ambiguity and data quality warnings"
+    )
+    overall_status: str = Field(
+        default="completed", description="Execution status: completed, partially_completed, failed"
+    )
+    created_at: datetime = Field(
+        default_factory=utc_now, description="Timestamp when discovery initiated"
+    )
+    completed_at: datetime = Field(
+        default_factory=utc_now, description="Timestamp when discovery completed"
+    )
+    duration_ms: float = Field(default=0.0, description="Execution duration in milliseconds")
+
+
+class DecisionMakerPreviewResponse(BaseModel):
+    """Preview response outlining decision-maker search strategy."""
+
+    company_name: str = Field(..., description="Target company name")
+    company_domain: str | None = Field(default=None, description="Resolved corporate domain")
+    target_departments: list[str] = Field(
+        default_factory=list, description="Departments prioritized for discovery"
+    )
+    planned_search_queries: list[str] = Field(
+        default_factory=list, description="Search queries formulated for the plan"
+    )
+    estimated_role_targets: list[str] = Field(
+        default_factory=list, description="Job titles and personas targeted"
     )

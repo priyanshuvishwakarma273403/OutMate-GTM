@@ -102,3 +102,69 @@ class CompanyPreviewRequest(BaseModel):
     website_domain: str | None = Field(
         default=None, description="Optional corporate domain to evaluate"
     )
+
+
+class DecisionMakerResearchRequest(BaseModel):
+    """Request payload for discovering and verifying real business decision makers."""
+
+    company_name: str = Field(
+        ...,
+        min_length=2,
+        max_length=200,
+        examples=["Vercel"],
+        description="Target company name for decision-maker discovery",
+    )
+    company_domain: str | None = Field(
+        default=None,
+        examples=["vercel.com"],
+        description="Optional corporate domain to improve discovery accuracy",
+    )
+    product_context: str | None = Field(
+        default=None,
+        examples=["Developer cloud infrastructure & serverless deployment"],
+        description="Product or service scenario to assess purchasing relevance and buyer persona",
+    )
+    target_departments: list[str] = Field(
+        default_factory=list,
+        examples=[["engineering", "product"]],
+        description="Specific departments to prioritize (e.g. ['engineering', 'security'])",
+    )
+    target_roles: list[str] = Field(
+        default_factory=list,
+        examples=[["cto", "vp engineering", "head of platform"]],
+        description="Specific role titles to prioritize",
+    )
+    seniority_levels: list[str] = Field(
+        default_factory=list,
+        examples=[["c_level", "vp"]],
+        description="Specific seniority tiers (e.g. ['c_level', 'vp', 'director'])",
+    )
+    discovery_limit: int = Field(
+        default=10,
+        ge=1,
+        le=50,
+        description="Maximum number of verified candidates to return",
+    )
+    include_former_employees: bool = Field(
+        default=False,
+        description="When true, includes historical/former employees in the report",
+    )
+    research_depth: str = Field(
+        default="standard",
+        description="Discovery depth: 'standard' or 'deep'",
+    )
+
+
+class DecisionMakerPreviewRequest(BaseModel):
+    """Request payload for previewing decision-maker discovery plan."""
+
+    company_name: str = Field(..., min_length=2, max_length=200, description="Target company name")
+    company_domain: str | None = Field(
+        default=None, description="Optional verified company domain"
+    )
+    target_departments: list[str] = Field(
+        default_factory=list, description="Target departments to focus discovery"
+    )
+    product_context: str | None = Field(
+        default=None, description="Optional product or selling context"
+    )

@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.routes.decision_makers import router as decision_makers_router
 from app.api.routes.health import router as health_router
 from app.api.routes.llm import router as llm_router
 from app.api.routes.research import router as research_router
@@ -123,6 +124,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(llm_router)
     app.include_router(research_router)
+    app.include_router(decision_makers_router)
 
     # Mount Streamable MCP Server Starlette App for Remote Claude.ai integration
     mcp_server = OutmateMCPServer(settings=settings)
