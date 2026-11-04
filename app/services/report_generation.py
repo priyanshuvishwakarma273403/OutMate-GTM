@@ -41,7 +41,6 @@ class ReportGenerationService:
             dm_summary_lines.append(
                 f"- {s.person.full_name}: {s.person.title} ({s.person.department.value}, Tier: {s.score.tier.value})"
             )
-        dm_summary_text = "\n".join(dm_summary_lines) if dm_summary_lines else "No decision-makers verified."
 
         exec_summary = (
             f"GTM intelligence assessment for {company.name} ({company.domain}). "
@@ -53,10 +52,18 @@ class ReportGenerationService:
             f"Primary industry classification: {company.industry.value}.",
             f"Discovered {len(decision_makers)} decision-maker candidate(s) from public records.",
         ]
+        if dm_summary_lines:
+            key_findings.append(
+                "Key verified prospects: "
+                + ", ".join(s.person.full_name for s in decision_makers[:3])
+                + "."
+            )
         if company.headquarters:
             key_findings.append(f"Headquarters verified at: {company.headquarters}.")
         if company.tech_stack:
-            key_findings.append(f"Identified software/developer stack: {', '.join(company.tech_stack[:4])}.")
+            key_findings.append(
+                f"Identified software/developer stack: {', '.join(company.tech_stack[:4])}."
+            )
 
         # Generate outreach angles based on top candidates
         recommended_outreach_angles = []
@@ -130,5 +137,7 @@ class ReportGenerationService:
         for finding in report.key_findings:
             lines.append(f"- {finding}")
 
-        lines.extend(["", "---", "*Outmate GTM Intelligence Engine — Real Public Evidence Research*"])
+        lines.extend(
+            ["", "---", "*Outmate GTM Intelligence Engine — Real Public Evidence Research*"]
+        )
         return "\n".join(lines)

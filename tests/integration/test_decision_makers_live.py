@@ -78,3 +78,4 @@ async def test_live_decision_makers_discovery_end_to_end() -> None:
         assert 0.0 <= s <= 100.0
     for i in range(len(scores) - 1):
         assert scores[i] >= scores[i + 1]
+

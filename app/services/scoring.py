@@ -96,7 +96,9 @@ class ScoringService:
     ) -> RelevanceScore:
         """Calculate multi-dimensional relevance score (0-100) and explainable rationale."""
         seniority_fit = self._calc_seniority_fit(person.seniority, target_seniority)
-        department_fit = self._calc_department_fit(person.department, query_context, target_departments)
+        department_fit = self._calc_department_fit(
+            person.department, query_context, target_departments
+        )
         evidence_confidence = self._calc_evidence_confidence(person)
 
         # 35% Seniority, 35% Department, 30% Evidence confidence
@@ -104,9 +106,15 @@ class ScoringService:
         overall_score = round(raw_score, 1)
 
         # Assign Relevance Tier
-        if overall_score >= 75.0 and person.employment_status != EmploymentStatus.HISTORICAL_EMPLOYMENT:
+        if (
+            overall_score >= 75.0
+            and person.employment_status != EmploymentStatus.HISTORICAL_EMPLOYMENT
+        ):
             tier = RelevanceTier.HIGH
-        elif overall_score >= 50.0 and person.employment_status != EmploymentStatus.HISTORICAL_EMPLOYMENT:
+        elif (
+            overall_score >= 50.0
+            and person.employment_status != EmploymentStatus.HISTORICAL_EMPLOYMENT
+        ):
             tier = RelevanceTier.MEDIUM
         elif overall_score >= 25.0:
             tier = RelevanceTier.LOW

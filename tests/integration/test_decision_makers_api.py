@@ -108,7 +108,7 @@ async def test_preview_decision_makers_endpoint_success() -> None:
         company_name="Vercel",
         company_domain="vercel.com",
         target_departments=["engineering"],
-        planned_search_queries=['site:vercel.com leadership', '"Vercel" leadership'],
+        planned_search_queries=["site:vercel.com leadership", '"Vercel" leadership'],
         estimated_role_targets=["Chief Executive Officer", "VP of Engineering"],
     )
 
@@ -184,7 +184,9 @@ async def test_get_report_and_person_endpoints() -> None:
         assert resp1.json()["research_id"] == "dm-lookup-789"
 
         # 2. GET /{research_id}/people/{person_id}
-        resp2 = await client.get("/api/v1/research/decision-makers/dm-lookup-789/people/dm_rauchg_1")
+        resp2 = await client.get(
+            "/api/v1/research/decision-makers/dm-lookup-789/people/dm_rauchg_1"
+        )
         assert resp2.status_code == 200
         person_data = resp2.json()
         assert person_data["person_id"] == "dm_rauchg_1"

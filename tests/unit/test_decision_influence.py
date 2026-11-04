@@ -42,7 +42,9 @@ def _build_candidate(
 def test_assess_economic_buyer_c_level() -> None:
     """Verify CEO/CFO are assessed as Economic Buyers with budget allocation responsibility."""
     service = DecisionInfluenceAssessmentService()
-    ceo = _build_candidate("Jane Boss", "Chief Executive Officer", Department.EXECUTIVE, SeniorityLevel.C_LEVEL)
+    ceo = _build_candidate(
+        "Jane Boss", "Chief Executive Officer", Department.EXECUTIVE, SeniorityLevel.C_LEVEL
+    )
 
     assessment = service.assess_influence(ceo)
 
@@ -56,7 +58,9 @@ def test_assess_economic_buyer_c_level() -> None:
 def test_assess_technical_decision_maker() -> None:
     """Verify VP Engineering and Head of Security are categorized as Technical Decision Makers."""
     service = DecisionInfluenceAssessmentService()
-    vp_eng = _build_candidate("Bob Tech", "VP of Engineering", Department.ENGINEERING, SeniorityLevel.VP)
+    vp_eng = _build_candidate(
+        "Bob Tech", "VP of Engineering", Department.ENGINEERING, SeniorityLevel.VP
+    )
 
     assessment = service.assess_influence(vp_eng)
 
@@ -85,7 +89,9 @@ def test_assess_procurement_stakeholder() -> None:
 def test_assess_product_context_alignment() -> None:
     """Verify purchasing relevance reflects high alignment when candidate matches product context."""
     service = DecisionInfluenceAssessmentService()
-    vp_eng = _build_candidate("Bob Tech", "VP of Engineering", Department.ENGINEERING, SeniorityLevel.VP)
+    vp_eng = _build_candidate(
+        "Bob Tech", "VP of Engineering", Department.ENGINEERING, SeniorityLevel.VP
+    )
 
     # 1. With aligned developer tool context
     assessment_aligned = service.assess_influence(

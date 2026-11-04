@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.domain.models.person import Department, EmploymentStatus, SeniorityLevel
-from app.domain.models.report import RelevanceTier
 from app.integrations.search.base import SearchResultItem
 from app.integrations.search.providers.mock import MockSearchClient
 from app.llm.base import StructuredLLMResponse, TokenUsage
@@ -82,8 +81,10 @@ async def test_discover_decision_makers_grounding_verification() -> None:
     # We make mock_llm return two candidates:
     # 1. Valid: citing the real evidence passed in prompt
     # 2. Hallucinated: citing a fake evidence_id "ev_fake123"
-    async def fake_structured_response(*args, **kwargs):
-        prompt = kwargs.get("prompt", "")
+    async def fake_structured_response(
+        *args: object, **kwargs: object
+    ) -> StructuredLLMResponse[ExtractedCandidateList]:
+        prompt = str(kwargs.get("prompt", ""))
         # Extract the real evidence id generated in the prompt
         real_ev_id = "ev_unknown"
         for line in prompt.split("\n"):
@@ -193,8 +194,10 @@ async def test_historical_employee_filtering() -> None:
 
     mock_llm = AsyncMock(spec=LLMService)
 
-    async def fake_structured_response(*args, **kwargs):
-        prompt = kwargs.get("prompt", "")
+    async def fake_structured_response(
+        *args: object, **kwargs: object
+    ) -> StructuredLLMResponse[ExtractedCandidateList]:
+        prompt = str(kwargs.get("prompt", ""))
         real_ev_id = "ev_unknown"
         for line in prompt.split("\n"):
             if "[EVIDENCE_ID:" in line:

@@ -46,7 +46,9 @@ def _create_person(
 async def test_score_high_seniority_target_department() -> None:
     """Verify C-level / VP in targeted department with verified employment achieves High tier."""
     scoring = ScoringService()
-    vp_eng = _create_person("Alice VP", "VP of Engineering", Department.ENGINEERING, SeniorityLevel.VP)
+    vp_eng = _create_person(
+        "Alice VP", "VP of Engineering", Department.ENGINEERING, SeniorityLevel.VP
+    )
 
     score = await scoring.score_decision_maker(
         person=vp_eng,
@@ -89,8 +91,19 @@ async def test_rank_decision_makers_sorting_order() -> None:
     scoring = ScoringService()
 
     vp = _create_person("Alice VP", "VP of Engineering", Department.ENGINEERING, SeniorityLevel.VP)
-    staff = _create_person("Charlie IC", "Software Engineer", Department.ENGINEERING, SeniorityLevel.INDIVIDUAL_CONTRIBUTOR)
-    former = _create_person("Dan Ex", "Former VP", Department.ENGINEERING, SeniorityLevel.VP, employment_status=EmploymentStatus.HISTORICAL_EMPLOYMENT)
+    staff = _create_person(
+        "Charlie IC",
+        "Software Engineer",
+        Department.ENGINEERING,
+        SeniorityLevel.INDIVIDUAL_CONTRIBUTOR,
+    )
+    former = _create_person(
+        "Dan Ex",
+        "Former VP",
+        Department.ENGINEERING,
+        SeniorityLevel.VP,
+        employment_status=EmploymentStatus.HISTORICAL_EMPLOYMENT,
+    )
 
     ranked = await scoring.rank_decision_makers(
         people=[staff, former, vp],

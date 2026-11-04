@@ -15,6 +15,11 @@ Outmate GTM provides foundational HTTP endpoints for process monitoring, subsyst
 | `POST`| `/api/v1/research/company/preview` | Company Research | Previews identity resolution and generated search query plan without scraping. |
 | `GET` | `/api/v1/research/{research_id}` | Company Research | Retrieves existing completed research report by ID. |
 | `GET` | `/api/v1/research/{research_id}/sources` | Company Research | Retrieves source audit trail and provenance metadata for a completed research report. |
+| `POST`| `/api/v1/research/decision-makers` | Decision Makers | Evidence-backed decision-maker discovery, employment verification, and relevance scoring. |
+| `POST`| `/api/v1/research/decision-makers/preview` | Decision Makers | Previews discovery query plan and estimated personas without live scraping. |
+| `GET` | `/api/v1/research/decision-makers/{research_id}` | Decision Makers | Retrieves existing decision-maker report by ID. |
+| `GET` | `/api/v1/research/decision-makers/{research_id}/people/{person_id}` | Decision Makers | Retrieves specific verified decision-maker profile and supporting evidence. |
+| `GET` | `/api/v1/research/decision-makers/{research_id}/sources` | Decision Makers | Retrieves public source evidence records backing a decision-maker research report. |
 | `GET` | `/docs` | Documentation | Interactive Swagger UI API documentation. |
 | `GET` | `/redoc` | Documentation | ReDoc alternative API documentation. |
 | `GET` | `/openapi.json`| Documentation | Raw OpenAPI 3.1 schema specification. |
@@ -200,4 +205,139 @@ Outmate GTM provides foundational HTTP endpoints for process monitoring, subsyst
 ### `GET /api/v1/research/{research_id}/sources`
 - **Purpose**: Retrieve the audit trail and provenance metadata of discovered and retrieved sources for a completed research report.
 - **Status Code**: `200 OK` or `404 Not Found`.
+
+---
+
+## 3. Decision Maker Discovery Endpoints
+
+### `POST /api/v1/research/decision-makers/preview`
+- **Purpose**: Previews targeted search queries and role expectations without web retrieval.
+- **Status Code**: `200 OK`
+- **Request Schema** (`DecisionMakerPreviewRequest`):
+  ```json
+  {
+    "company_name": "Vercel",
+    "company_domain": "vercel.com",
+    "target_departments": ["engineering", "executive"]
+  }
+  ```
+- **Response Schema** (`DecisionMakerPreviewResponse`):
+  ```json
+  {
+    "company_name": "Vercel",
+    "company_domain": "vercel.com",
+    "target_departments": ["engineering", "executive"],
+    "planned_search_queries": [
+      "\"Vercel\" (\"CEO\" OR \"CTO\" OR \"Founder\") leadership executives",
+      "\"Vercel\" (\"VP Engineering\" OR \"Head of Product\")",
+      "site:vercel.com inurl:about OR inurl:team"
+    ],
+    "estimated_role_targets": [
+      "Chief Executive Officer",
+      "Chief Technology Officer",
+      "VP of Engineering",
+      "Head of Product"
+    ]
+  }
+  ```
+
+### `POST /api/v1/research/decision-makers`
+- **Purpose**: Executes live evidence-backed decision-maker discovery, employment verification, role classification, and buying persona scoring.
+- **Status Code**: `200 OK`
+- **Request Schema** (`DecisionMakerResearchRequest`):
+  ```json
+  {
+    "company_name": "Vercel",
+    "company_domain": "vercel.com",
+    "target_departments": ["executive", "engineering"],
+    "seniority_levels": ["c_level", "vp"],
+    "product_context": "Developer cloud platform and edge compute",
+    "discovery_limit": 5,
+    "include_former_employees": false
+  }
+  ```
+- **Response Schema** (`DecisionMakerReport`):
+  ```json
+  {
+    "research_id": "dd2e82de-dcfb-4fd4-870a-a17ed5f5260c",
+    "company_name": "Vercel",
+    "company_domain": "vercel.com",
+    "people": [
+      {
+        "person_id": "dm_a1b2c3d4e5f6",
+        "full_name": "Guillermo Rauch",
+        "company_name": "Vercel",
+        "company_domain": "vercel.com",
+        "title": "CEO and Founder",
+        "normalized_title": "Chief Executive Officer",
+        "seniority": "c_level",
+        "department": "executive",
+        "employment_status": "current_employment_verified",
+        "confidence_score": 0.95,
+        "confidence_explanation": "Verified current leadership on official 'vercel.com' domain with external corroboration.",
+        "contact_info": {
+          "linkedin_url": "https://linkedin.com/in/rauchg"
+        },
+        "assessment": {
+          "person_id": "dm_a1b2c3d4e5f6",
+          "role_category": "executive",
+          "decision_influence": "economic_buyer",
+          "relevant_responsibilities": [
+            "Corporate budget allocation and executive sign-off"
+          ],
+          "purchasing_relevance": "High alignment: Product matches candidate scope.",
+          "reasoning": "Executive with ultimate corporate budget authority.",
+          "supporting_evidence_ids": ["ev_12345"]
+        },
+        "evidence": [
+          {
+            "evidence_id": "ev_12345",
+            "source_url": "https://theexecutivereview.org/executives/guillermo-rauch.html",
+            "source_type": "news_article",
+            "snippet": "Guillermo Rauch is ranked as CEO and founder of Vercel.",
+            "confidence": 0.9
+          }
+        ]
+      }
+    ],
+    "scored_people": [
+      {
+        "person": { "...": "..." },
+        "score": {
+          "overall_score": 96.5,
+          "tier": "high",
+          "seniority_fit": 1.0,
+          "department_fit": 1.0,
+          "evidence_confidence": 0.95,
+          "rationale": "Seniority fit: 1.00 (c_level), Department fit: 1.00 (executive), Evidence confidence: 0.95."
+        }
+      }
+    ],
+    "evidence": [],
+    "discovery_summary": {
+      "search_queries_executed": [],
+      "sources_retrieved": 6,
+      "candidates_discovered": 3,
+      "candidates_verified": 2,
+      "candidates_excluded": 1,
+      "duplicate_candidates_merged": 1
+    },
+    "limitations": [],
+    "overall_status": "completed",
+    "duration_ms": 22450.0
+  }
+  ```
+
+### `GET /api/v1/research/decision-makers/{research_id}`
+- **Purpose**: Retrieve an existing decision-maker report by research ID.
+- **Status Code**: `200 OK` or `404 Not Found`.
+
+### `GET /api/v1/research/decision-makers/{research_id}/people/{person_id}`
+- **Purpose**: Retrieve an individual decision-maker's verified profile, assessment, and evidence citations.
+- **Status Code**: `200 OK` or `404 Not Found`.
+
+### `GET /api/v1/research/decision-makers/{research_id}/sources`
+- **Purpose**: Retrieve the audit trail of public evidence records backing a decision-maker discovery report.
+- **Status Code**: `200 OK` or `404 Not Found`.
+
 

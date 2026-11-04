@@ -189,53 +189,117 @@ class PeopleResearchService:
             company_domain = resolution.resolved_domain
             company_name = resolution.normalized_name
             if resolution.status == IdentityResolutionStatus.AMBIGUOUS:
-                warnings.append(resolution.ambiguity_reason or "Company identity has ambiguous domain candidates.")
+                warnings.append(
+                    resolution.ambiguity_reason
+                    or "Company identity has ambiguous domain candidates."
+                )
             elif resolution.status == IdentityResolutionStatus.UNRESOLVED:
-                warnings.append("Company official domain unverified; discovery relying on public references.")
+                warnings.append(
+                    "Company official domain unverified; discovery relying on public references."
+                )
                 limitations.append("Research conducted without verified first-party domain.")
 
         target_domain = company_domain or ""
 
         # 2. Formulate Targeted Search Queries
         queries = [
-            f'"{company_name}" ("CEO" OR "CTO" OR "Chief Technology Officer" OR "Founder" OR "Chief Executive") leadership',
+            f'"{company_name}" ("CEO" OR "CTO" OR "Chief Technology Officer" OR "Founder" OR "Chief Executive") leadership executives',
             f'"{company_name}" ("VP Engineering" OR "Head of Product" OR "VP" OR "Director" OR "Chief Product Officer")',
-            f'"{company_name}" ("appointed as" OR "joined as" OR "promoted to" OR "Head of")',
+            f'"{company_name}" leadership team executives bio',
         ]
         if target_domain:
-            queries.insert(0, f"site:{target_domain} leadership OR team OR executives OR founders")
+            queries.append(
+                f"site:{target_domain} inurl:about OR inurl:team OR inurl:leadership OR inurl:company"
+            )
 
         if request.target_departments:
             dept_terms = " OR ".join(f'"{d}"' for d in request.target_departments)
             queries.append(f'"{company_name}" ({dept_terms}) (Head OR Director OR VP)')
 
         # 3. Dispatch Search Queries
-        raw_urls: list[str] = []
+        query_results: list[list[SearchResultItem]] = []
         search_snippets_map: dict[str, SearchResultItem] = {}
 
         for q_str in queries:
             try:
-                results = await self.search_client.search(
-                    SearchQuery(query=q_str, max_results=5)
-                )
+                results = await self.search_client.search(SearchQuery(query=q_str, max_results=5))
+                query_results.append(results)
                 for item in results:
-                    raw_urls.append(item.url)
                     if item.url not in search_snippets_map:
                         search_snippets_map[item.url] = item
             except Exception as exc:
                 logger.warning("Search query failed for '%s': %s", q_str, exc)
                 warnings.append(f"Search provider warning on query '{q_str}': {exc}")
 
+        # Round-robin collection across queries to avoid single-query starvation
+        interleaved_urls: list[str] = []
+        max_items_per_query = max((len(r) for r in query_results), default=0)
+        for i in range(max_items_per_query):
+            for r_list in query_results:
+                if i < len(r_list):
+                    url = r_list[i].url
+                    # Filter out low-information documentation / kb / template pages
+                    url_lower = url.lower()
+                    if not any(
+                        p in url_lower
+                        for p in (
+                            "/docs/",
+                            "/documentation/",
+                            "/kb/",
+                            "/help/",
+                            "/support/",
+                            "/templates/",
+                            "/api-reference/",
+                            "/rest-api/",
+                        )
+                    ):
+                        interleaved_urls.append(url)
+
         # 4. Deduplicate and Prioritize URLs
-        deduped_urls = deduplicate_urls(raw_urls)
-        max_fetch = 8 if request.research_depth == "deep" else 5
-        target_urls = deduped_urls[:max_fetch]
+        deduped_urls = deduplicate_urls(interleaved_urls)
+
+        def _url_priority(u: str) -> int:
+            u_l = u.lower()
+            if any(
+                k in u_l
+                for k in (
+                    "about",
+                    "team",
+                    "leadership",
+                    "executive",
+                    "founder",
+                    "people",
+                    "board",
+                    "bio",
+                )
+            ):
+                return 0
+            if any(
+                k in u_l
+                for k in (
+                    "unifygtm",
+                    "cbinsights",
+                    "theorg",
+                    "wikipedia",
+                    "executivereview",
+                    "bloomberg",
+                )
+            ):
+                return 1
+            return 2
+
+        sorted_urls = sorted(deduped_urls, key=_url_priority)
+        max_fetch = 10 if request.research_depth == "deep" else 7
+        target_urls = sorted_urls[:max_fetch]
 
         # Prioritize official website pages
         if target_domain:
+            about_url = f"https://{target_domain}/about"
+            if about_url not in target_urls:
+                target_urls.insert(0, about_url)
             official_url = f"https://{target_domain}"
             if official_url not in target_urls:
-                target_urls.insert(0, official_url)
+                target_urls.insert(1, official_url)
 
         # 5. Fetch Accessible Webpages & Compile Evidence
         evidence_store: dict[str, EvidenceRecord] = {}
@@ -252,18 +316,36 @@ class PeopleResearchService:
 
                 # Collect informative paragraphs mentioning potential roles or leadership
                 leadership_keywords = (
-                    "founder", "ceo", "cto", "chief", "vp", "vice president", "head",
-                    "director", "lead", "leadership", "executive", "joined", "appointed",
-                    "president", "officer", "team", "author", "engineer"
+                    "founder",
+                    "ceo",
+                    "cto",
+                    "chief",
+                    "vp",
+                    "vice president",
+                    "head",
+                    "director",
+                    "lead",
+                    "leadership",
+                    "executive",
+                    "joined",
+                    "appointed",
+                    "president",
+                    "officer",
+                    "team",
+                    "author",
+                    "engineer",
                 )
 
                 candidate_paragraphs = [
-                    p for p in extracted.paragraphs
+                    p
+                    for p in extracted.paragraphs
                     if any(kw in p.lower() for kw in leadership_keywords)
                 ]
 
                 # Fallback to general paragraphs if none matched keywords
-                selected_paragraphs = candidate_paragraphs[:5] if candidate_paragraphs else extracted.paragraphs[:3]
+                selected_paragraphs = (
+                    candidate_paragraphs[:5] if candidate_paragraphs else extracted.paragraphs[:3]
+                )
 
                 for p in selected_paragraphs:
                     ev_id = generate_evidence_id()
@@ -299,8 +381,28 @@ class PeopleResearchService:
                         f"[EVIDENCE_ID: {ev_id} | SOURCE: {url} | TITLE: {sr_item.title}]\n{sr_item.snippet}"
                     )
 
+        # Also incorporate top search snippets for multi-source corroboration
+        existing_sources = {ev.source_url for ev in evidence_store.values()}
+        for s_url, sr_item in list(search_snippets_map.items())[:6]:
+            if s_url not in existing_sources and sr_item.snippet:
+                s_type = classify_source_type(s_url, target_domain, title=sr_item.title)
+                ev_id = generate_evidence_id()
+                ev_record = EvidenceRecord(
+                    evidence_id=ev_id,
+                    source_url=s_url,
+                    source_type=s_type,
+                    title=sr_item.title,
+                    snippet=sr_item.snippet,
+                    captured_at=datetime.now(UTC),
+                    publication_date=sr_item.published_date,
+                )
+                evidence_store[ev_id] = ev_record
+                source_excerpts_for_llm.append(
+                    f"[EVIDENCE_ID: {ev_id} | SOURCE: {s_url} | TITLE: {sr_item.title}]\n{sr_item.snippet}"
+                )
+
         # 6. Evidence-Bound Candidate Extraction via LLM
-        combined_text = "\n\n---\n\n".join(source_excerpts_for_llm[:12])
+        combined_text = "\n\n---\n\n".join(source_excerpts_for_llm[:16])
         extracted_candidates: list[ExtractedPersonCandidate] = []
 
         if combined_text.strip():
@@ -375,9 +477,7 @@ class PeopleResearchService:
                 department=norm_role.department,
                 biography=candidate.biography_excerpt,
                 biography_url=candidate.public_profile_url,
-                contact_info=ContactCoordinates(
-                    linkedin_url=candidate.public_profile_url
-                ),
+                contact_info=ContactCoordinates(linkedin_url=candidate.public_profile_url),
                 evidence=valid_evidence,
             )
             candidate_entities.append(dm)
@@ -390,24 +490,24 @@ class PeopleResearchService:
         verified_candidates: list[DecisionMaker] = []
         excluded_count = 0
 
-        for candidate in deduped_candidates:
+        for dm_candidate in deduped_candidates:
             emp_status, conf_score, rationale = self.employment_service.verify_employment(
-                person_name=candidate.full_name,
+                person_name=dm_candidate.full_name,
                 company_name=company_name,
                 company_domain=target_domain,
-                evidence_records=candidate.evidence,
+                evidence_records=dm_candidate.evidence,
             )
 
-            candidate.employment_status = emp_status
-            candidate.confidence_score = conf_score
-            candidate.confidence_explanation = rationale
+            dm_candidate.employment_status = emp_status
+            dm_candidate.confidence_score = conf_score
+            dm_candidate.confidence_explanation = rationale
 
             # Assess decision-making influence
             assessment = self.influence_service.assess_influence(
-                candidate=candidate,
+                candidate=dm_candidate,
                 product_context=request.product_context,
             )
-            candidate.assessment = assessment
+            dm_candidate.assessment = assessment
 
             # Filter historical employees if requested
             if (
@@ -416,26 +516,32 @@ class PeopleResearchService:
             ):
                 excluded_count += 1
                 excluded_candidates_summary.append(
-                    f"{candidate.full_name} ({candidate.title}): Excluded as historical employee ({rationale})"
+                    f"{dm_candidate.full_name} ({dm_candidate.title}): Excluded as historical employee ({rationale})"
                 )
                 continue
 
-            verified_candidates.append(candidate)
+            verified_candidates.append(dm_candidate)
 
         # 10. Relevance Scoring & Ranking
         target_seniority_enums: list[SeniorityLevel] | None = None
         if request.seniority_levels:
             target_seniority_enums = [
-                SeniorityLevel(s.lower()) for s in request.seniority_levels if s.lower() in SeniorityLevel._value2member_map_
+                SeniorityLevel(s.lower())
+                for s in request.seniority_levels
+                if s.lower() in SeniorityLevel._value2member_map_
             ]
 
         target_dept_enums: list[Department] | None = None
         if request.target_departments:
             target_dept_enums = [
-                Department(d.lower()) for d in request.target_departments if d.lower() in Department._value2member_map_
+                Department(d.lower())
+                for d in request.target_departments
+                if d.lower() in Department._value2member_map_
             ]
 
-        scored_candidates: list[ScoredDecisionMaker] = await self.scoring_service.rank_decision_makers(
+        scored_candidates: list[
+            ScoredDecisionMaker
+        ] = await self.scoring_service.rank_decision_makers(
             people=verified_candidates,
             query_context=request.product_context or "",
             target_seniority=target_seniority_enums,

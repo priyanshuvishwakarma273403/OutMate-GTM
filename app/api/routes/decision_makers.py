@@ -135,3 +135,4 @@ async def get_decision_maker_sources_endpoint(
             detail=f"Decision-maker research report with ID '{research_id}' was not found.",
         )
     return report.evidence
+

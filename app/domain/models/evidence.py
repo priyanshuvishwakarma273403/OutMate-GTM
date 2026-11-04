@@ -49,7 +49,8 @@ class EvidenceRecord(BaseModel):
     """A granular piece of verifiable evidence corroborating a company or person attribute."""
 
     evidence_id: str = Field(
-        default_factory=generate_evidence_id, description="Unique identifier for this evidence record"
+        default_factory=generate_evidence_id,
+        description="Unique identifier for this evidence record",
     )
     source_url: str = Field(..., description="Canonical URL where the evidence was found")
     source_type: EvidenceSourceType = Field(

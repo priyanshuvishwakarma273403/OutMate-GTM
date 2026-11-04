@@ -159,9 +159,7 @@ class DecisionMakerPreviewRequest(BaseModel):
     """Request payload for previewing decision-maker discovery plan."""
 
     company_name: str = Field(..., min_length=2, max_length=200, description="Target company name")
-    company_domain: str | None = Field(
-        default=None, description="Optional verified company domain"
-    )
+    company_domain: str | None = Field(default=None, description="Optional verified company domain")
     target_departments: list[str] = Field(
         default_factory=list, description="Target departments to focus discovery"
     )

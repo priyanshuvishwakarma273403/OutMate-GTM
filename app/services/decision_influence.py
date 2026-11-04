@@ -56,7 +56,8 @@ class DecisionInfluenceAssessmentService:
 
         # 3. Economic Buyer
         elif seniority == SeniorityLevel.C_LEVEL and any(
-            t in title_lower for t in ("ceo", "cfo", "chief executive", "chief financial", "president")
+            t in title_lower
+            for t in ("ceo", "cfo", "chief executive", "chief financial", "president")
         ):
             influence = DecisionInfluenceCategory.ECONOMIC_BUYER
             reasoning_parts.append(
@@ -65,7 +66,11 @@ class DecisionInfluenceAssessmentService:
             responsibilities.append("Corporate budget allocation and executive sign-off")
 
         # 4. Business Decision Maker
-        elif dept in (Department.PRODUCT, Department.OPERATIONS, Department.SALES) and seniority in (
+        elif dept in (
+            Department.PRODUCT,
+            Department.OPERATIONS,
+            Department.SALES,
+        ) and seniority in (
             SeniorityLevel.C_LEVEL,
             SeniorityLevel.VP,
             SeniorityLevel.HEAD,
@@ -98,20 +103,17 @@ class DecisionInfluenceAssessmentService:
         purchasing_relevance = "General organizational leadership role"
         if product_context:
             is_tech_product = any(
-                term in context_lower for term in ("dev", "infra", "cloud", "api", "software", "tech")
+                term in context_lower
+                for term in ("dev", "infra", "cloud", "api", "software", "tech")
             )
             if is_tech_product and dept == Department.ENGINEERING:
-                purchasing_relevance = (
-                    f"High alignment: Product '{product_context}' directly matches candidate's engineering scope."
-                )
+                purchasing_relevance = f"High alignment: Product '{product_context}' directly matches candidate's engineering scope."
             elif "security" in context_lower and dept == Department.SECURITY:
                 purchasing_relevance = (
                     f"Direct alignment: Security solution matches {candidate.title} remit."
                 )
             else:
-                purchasing_relevance = (
-                    f"Evaluated against product scenario '{product_context}'; relevance depends on organizational purchasing policy."
-                )
+                purchasing_relevance = f"Evaluated against product scenario '{product_context}'; relevance depends on organizational purchasing policy."
         else:
             reasoning_parts.append(
                 "No target product scenario provided; specific buying authority for custom products remains unverified."
@@ -128,7 +130,9 @@ class DecisionInfluenceAssessmentService:
         elif dept in (Department.PRODUCT, Department.OPERATIONS, Department.SALES):
             role_category = RoleCategory.PRODUCT_BUSINESS
 
-        full_reasoning = " ".join(reasoning_parts) if reasoning_parts else "Role identified from public titles."
+        full_reasoning = (
+            " ".join(reasoning_parts) if reasoning_parts else "Role identified from public titles."
+        )
 
         return DecisionMakerAssessment(
             person_id=candidate.person_id,

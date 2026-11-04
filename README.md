@@ -14,9 +14,10 @@ Both execution modes share the exact same domain models, service layer, verifica
 
 ## Current Project Status
 
-> **Phase 2: Production-Ready Real Company Research Engine** (Active)
+> **Phase 3: Production-Ready Decision Maker Discovery & Verification Engine** (Completed)
 >
-> Phase 1 (OpenRouter LLM Integration) and Phase 2 (Real Company Research Engine) are completed and verified against live services. The engine uses Tavily Search API, strict SSRF-protected page retrieval, BeautifulSoup extraction, evidence-constrained LLM inference, and multi-source corroboration verification. Decision-maker discovery and MCP server hosting will be implemented in Phase 3.
+> Phase 1 (OpenRouter LLM Integration), Phase 2 (Real Company Research Engine), and Phase 3 (Decision Maker Discovery & Verification Engine) are completed and verified against live services.
+> The engine identifies real people holding commercial decision-making and purchasing influence within companies strictly from public evidence, categorizes buying personas (Economic Buyer, Technical Decision Maker, Procurement Stakeholder, Evaluator), verifies active vs. historical employment status, scores candidate buying relevance, and links every claim to public source citations.
 
 ---
 
@@ -197,6 +198,41 @@ Retrieve completed report and audit sources:
 ```bash
 curl http://127.0.0.1:8000/api/v1/research/<research_id>
 curl http://127.0.0.1:8000/api/v1/research/<research_id>/sources
+```
+
+### 6. Discover and Verify Real Decision Makers
+
+Preview discovery search strategy and estimated personas:
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/research/decision-makers/preview \
+  -H "Content-Type: application/json" \
+  -d '{
+    "company_name": "Vercel",
+    "company_domain": "vercel.com",
+    "target_departments": ["executive", "engineering"]
+  }'
+```
+
+Execute full evidence-backed decision-maker discovery, employment verification, and relevance scoring:
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/research/decision-makers \
+  -H "Content-Type: application/json" \
+  -d '{
+    "company_name": "Vercel",
+    "company_domain": "vercel.com",
+    "target_departments": ["executive", "engineering"],
+    "seniority_levels": ["c_level", "vp"],
+    "product_context": "Developer frontend cloud and serverless compute",
+    "discovery_limit": 5,
+    "include_former_employees": false
+  }'
+```
+
+Retrieve completed report, individual decision-maker profile, and source evidence:
+```bash
+curl http://127.0.0.1:8000/api/v1/research/decision-makers/<research_id>
+curl http://127.0.0.1:8000/api/v1/research/decision-makers/<research_id>/people/<person_id>
+curl http://127.0.0.1:8000/api/v1/research/decision-makers/<research_id>/sources
 ```
 
 ---

@@ -1,7 +1,5 @@
 """Unit tests for person identity resolution and candidate deduplication."""
 
-from datetime import UTC, datetime
-
 from app.domain.models.evidence import EvidenceRecord, EvidenceSourceType
 from app.domain.models.person import (
     ContactCoordinates,
