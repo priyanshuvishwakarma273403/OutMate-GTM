@@ -110,4 +110,3 @@ async def test_resolve_identity_unresolved_when_no_match() -> None:
     resolution = await service.resolve_identity("NonExistentCorpXYZ123")
     assert resolution.status == IdentityResolutionStatus.UNRESOLVED
     assert resolution.confidence < 0.5
-

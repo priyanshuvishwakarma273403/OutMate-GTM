@@ -31,4 +31,3 @@ def get_search_client(settings: AppSettings | None = None) -> BaseSearchClient:
         )
 
     raise ConfigurationError(f"Unsupported search provider: '{provider_name}'")
-

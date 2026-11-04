@@ -85,4 +85,3 @@ async def test_live_company_research_end_to_end() -> None:
         assert ev.source_url.startswith("http")
         assert len(ev.snippet) > 0
         assert ev.verification_status is not None
-

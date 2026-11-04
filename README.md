@@ -14,9 +14,9 @@ Both execution modes share the exact same domain models, service layer, verifica
 
 ## Current Project Status
 
-> **Phase 1: Project Foundation & Architecture** (Active)
+> **Phase 2: Production-Ready Real Company Research Engine** (Active)
 >
-> This repository contains the complete architectural foundation, interfaces, contracts, configuration management, MCP server definitions, and testing baseline. Actual research search engines, LLM inference endpoints, and external OAuth proxies will be implemented in Phase 2.
+> Phase 1 (OpenRouter LLM Integration) and Phase 2 (Real Company Research Engine) are completed and verified against live services. The engine uses Tavily Search API, strict SSRF-protected page retrieval, BeautifulSoup extraction, evidence-constrained LLM inference, and multi-source corroboration verification. Decision-maker discovery and MCP server hosting will be implemented in Phase 3.
 
 ---
 
@@ -177,6 +177,28 @@ Example response:
 }
 ```
 
+### 5. Execute Real Company Research
+
+Preview research plan:
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/research/company/preview \
+  -H "Content-Type: application/json" \
+  -d '{"company_name": "Vercel"}'
+```
+
+Execute full live evidence-backed research:
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/research/company \
+  -H "Content-Type: application/json" \
+  -d '{"company_name": "Vercel", "website_domain": "vercel.com", "research_depth": "standard"}'
+```
+
+Retrieve completed report and audit sources:
+```bash
+curl http://127.0.0.1:8000/api/v1/research/<research_id>
+curl http://127.0.0.1:8000/api/v1/research/<research_id>/sources
+```
+
 ---
 
 ## OpenRouter LLM Integration Architecture
@@ -252,7 +274,7 @@ mypy app tests
 
 ## Roadmap
 
-- [x] **Phase 1: Project Setup & Architectural Foundation** (Current)
+- [x] **Phase 1: Project Setup & Architectural Foundation**
   - Modular monorepo scaffolding
   - Domain models & schemas
   - Centralized configuration & lazy validation
@@ -261,13 +283,17 @@ mypy app tests
   - Nango proxy client abstraction
   - FastAPI health & readiness endpoints
   - Test suites & CI tooling configuration
-- [ ] **Phase 2: Service Layer & Provider Implementations**
-  - Search provider integration (Exa / Tavily / Serper)
-  - Decision-maker scoring engine
-  - Verification & corroboration heuristics
-  - OpenRouter prompt engineering & tool loop
-  - Remote MCP server HTTP/SSE mounting
-- [ ] **Phase 3: Integrations & Reporting**
+- [x] **Phase 2: Real Company Research Engine** (Current)
+  - Tavily search provider integration with exponential retries
+  - Company identity resolution & ambiguity detection
+  - Safe source retrieval with strict SSRF & size limits
+  - BeautifulSoup HTML content & metadata extraction
+  - Evidence-constrained LLM synthesis (zero hallucination)
+  - Cross-source verification and confidence scoring
+  - REST endpoints (`/company`, `/preview`, `/{id}`, `/{id}/sources`)
+- [ ] **Phase 3: Decision-Maker Discovery & Integrations**
+  - Public leadership & executive role discovery
+  - Decision-maker relevance scoring engine
   - Nango HubSpot CRM export
   - Executive GTM report templating (Markdown & PDF)
   - Claude.ai production connector deployment

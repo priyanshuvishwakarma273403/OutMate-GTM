@@ -73,4 +73,3 @@ def test_extract_handles_empty_or_malformed_html() -> None:
 
     malformed_result = extractor.extract("<div><p>Unclosed paragraph")
     assert "Unclosed paragraph" in malformed_result.main_text
-

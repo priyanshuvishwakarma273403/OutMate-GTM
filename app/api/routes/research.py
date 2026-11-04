@@ -109,4 +109,3 @@ async def get_research_sources_endpoint(
             detail=f"Research report with ID '{research_id}' was not found.",
         )
     return report.source_summary
-

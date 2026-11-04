@@ -95,4 +95,3 @@ def test_assess_claim_with_zero_evidence() -> None:
     assert status == VerificationStatus.UNAVAILABLE
     assert confidence == 0.0
     assert "no public source evidence" in rationale.lower()
-
