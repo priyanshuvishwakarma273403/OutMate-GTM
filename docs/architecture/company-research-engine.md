@@ -160,3 +160,4 @@ The research service architecture is decoupled from HTTP transports to support d
 1. **JavaScript-Heavy SPAs**: Simple client-rendered single-page applications without server-side rendering or OpenGraph meta tags may yield limited HTML paragraphs. In such cases, the engine automatically falls back to search provider snippets.
 2. **Session Persistence**: In-memory repository preserves completed reports for the duration of the server process. Production clustered deployments should back this with persistent storage (e.g., PostgreSQL or Redis) in future phases.
 3. **Paywalls & CAPTCHAs**: The engine respects website access controls and does not attempt to bypass paywalls or anti-bot protections.
+
