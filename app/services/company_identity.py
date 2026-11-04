@@ -81,7 +81,7 @@ class CompanyIdentityResolutionService:
         if not raw_name:
             return ""
         cleaned = self.LEGAL_SUFFIX_REGEX.sub("", raw_name)
-        cleaned = re.sub(r"[,;]+", " ", cleaned)
+        cleaned = re.sub(r"[,;.\-_/]+", " ", cleaned)
         return re.sub(r"\s+", " ", cleaned).strip()
 
     def clean_domain(self, raw_domain: str | None) -> str | None:

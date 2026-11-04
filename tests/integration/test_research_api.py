@@ -165,3 +165,4 @@ async def test_validation_error_empty_company_name() -> None:
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         response = await client.post("/api/v1/research/company", json={"company_name": ""})
         assert response.status_code == 422
+

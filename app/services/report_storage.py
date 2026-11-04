@@ -43,3 +43,4 @@ _global_report_repo = InMemoryReportRepository()
 def get_report_repository() -> InMemoryReportRepository:
     """Provide singleton report repository instance."""
     return _global_report_repo
+

@@ -76,3 +76,4 @@ def test_classify_source_type_news_and_registries() -> None:
         classify_source_type("https://randomblog.org/post", "vercel.com")
         == EvidenceSourceType.OTHER
     )
+

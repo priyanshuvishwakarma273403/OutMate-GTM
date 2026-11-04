@@ -208,3 +208,4 @@ class TavilySearchClient(BaseSearchClient):
         if last_error:
             raise SearchProviderError(f"Tavily search failed after {self.MAX_RETRIES} retries")
         return []
+

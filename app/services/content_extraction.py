@@ -63,7 +63,7 @@ class ContentExtractionService:
         soup = BeautifulSoup(html, "html.parser")
 
         # 1. Remove comments
-        for comment in soup.find_all(text=lambda text: isinstance(text, Comment)):
+        for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
 
         # 2. Extract title
@@ -120,7 +120,7 @@ class ContentExtractionService:
             for p in content_root.find_all(["p", "h1", "h2", "h3", "h4", "li"]):
                 raw_text = p.get_text(separator=" ", strip=True)
                 cleaned = self._clean_whitespace(raw_text)
-                if len(cleaned) >= 25:  # Skip trivial snippets
+                if len(cleaned) >= 10:  # Retain informative headers and concise paragraphs
                     paragraphs.append(cleaned)
 
         full_text = "\n\n".join(paragraphs)

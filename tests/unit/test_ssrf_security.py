@@ -66,3 +66,4 @@ async def test_fetch_source_catches_ssrf_gracefully() -> None:
     assert result.status_code == 0
     assert result.error is not None
     assert "SSRF violation" in result.error
+
