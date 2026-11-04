@@ -3,6 +3,7 @@
 import time
 import uuid
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -10,7 +11,6 @@ from app.core.config import AppSettings, get_settings
 from app.core.logging import get_logger
 from app.domain.models.evidence import (
     EvidenceRecord,
-    EvidenceSourceType,
     generate_evidence_id,
 )
 from app.domain.models.person import (
@@ -21,7 +21,6 @@ from app.domain.models.person import (
     SeniorityLevel,
     generate_person_id,
 )
-from app.domain.models.report import ScoredDecisionMaker
 from app.integrations.search.base import BaseSearchClient, SearchQuery, SearchResultItem
 from app.integrations.search.factory import get_search_client
 from app.schemas.requests import (
@@ -33,6 +32,9 @@ from app.schemas.responses import (
     DecisionMakerReport,
     DiscoverySummary,
 )
+
+if TYPE_CHECKING:
+    from app.domain.models.report import ScoredDecisionMaker
 from app.services.company_identity import (
     CompanyIdentityResolutionService,
     IdentityResolutionStatus,
