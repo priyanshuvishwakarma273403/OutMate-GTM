@@ -152,3 +152,4 @@ sequenceDiagram
 2. **Protocol Independence**: The services layer has zero dependency on FastAPI, Starlette, OpenAI SDK, or MCP SDK types.
 3. **Strict Nango Boundaries**: Nango manages third-party OAuth tokens and executes authorized proxies (e.g. HubSpot CRM). It never manages LLM execution or internal agent states.
 4. **Data Integrity**: All discovered entities must link back to public `EvidenceRecord` instances with confidence metrics.
+

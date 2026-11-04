@@ -21,3 +21,4 @@ We chose **Python (3.11+)** with **FastAPI**, **Pydantic v2**, and modern async 
 
 ### Negative
 - CPU-intensive tasks require careful handling to avoid blocking the event loop; however, Outmate is almost entirely I/O-bound (HTTP search queries and LLM API requests).
+

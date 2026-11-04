@@ -152,21 +152,87 @@ curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/ready
 ```
 
+### 4. Test OpenRouter LLM Gateway Endpoint
+
+Once `OPENROUTER_API_KEY` is configured in `.env`, test the real endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/llm/test \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Explain B2B Go-To-Market in one sentence."}'
+```
+
+Example response:
+```json
+{
+  "status": "success",
+  "model": "anthropic/claude-3.5-sonnet",
+  "content": "A B2B Go-To-Market strategy is a comprehensive plan defining how a business targets, acquires, and retains commercial accounts.",
+  "usage": {
+    "prompt_tokens": 18,
+    "completion_tokens": 24,
+    "total_tokens": 42
+  },
+  "duration_ms": 780.2
+}
+```
+
+---
+
+## OpenRouter LLM Integration Architecture
+
+The LLM layer is built for high reliability, strict credential protection, and modular reuse across standalone agents and MCP tools:
+
+1. **`app.llm.openrouter.OpenRouterClient`**:
+   - Thin, asynchronous wrapper over the OpenAI Python SDK pointing to `https://openrouter.ai/api/v1`.
+   - Injects credentials via `AppSettings` (`OPENROUTER_API_KEY`).
+   - Translates upstream provider exceptions into typed Outmate domain exceptions (`AuthenticationError`, `LLMQuotaExceededError`, `LLMTimeoutError`, `LLMProviderError`).
+   - Strips Markdown formatting fences (```json ... ```) automatically for resilient structured extraction.
+   - Logs request telemetry (duration in ms, prompt/completion tokens) without leaking sensitive messages or authorization headers.
+
+2. **`app.services.llm.LLMService`**:
+   - Protocol-agnostic service layer consumed by FastAPI routes, CLI, and future research workflows.
+   - Provides `generate_response()` for raw completions with optional system prompts.
+   - Provides `generate_structured_response()` for Pydantic-validated JSON completions.
+
+3. **Required Environment Variables**:
+   - `OPENROUTER_API_KEY`: OpenRouter API key (`sk-or-v1-...`).
+   - `OPENROUTER_MODEL`: Model identifier (default: `anthropic/claude-3.5-sonnet` or `openai/gpt-4o-mini`).
+   - `OPENROUTER_BASE_URL`: Gateway URL (default: `https://openrouter.ai/api/v1`).
+   - `OPENROUTER_TIMEOUT`: Client timeout in seconds (default: `60.0`).
+   - `OPENROUTER_MAX_TOKENS`: Optional maximum tokens cap.
+   - `OPENROUTER_TEMPERATURE`: Sampling temperature (default: `0.2`).
+
 ---
 
 ## Running Tests & Quality Checks
 
 ```bash
-# Run pytest test suite
-make test
+# 1. Run unit tests and mocked integration tests (excluding live network tests)
+pytest
 
-# Run Ruff linter and formatter checks
-make lint
-make format
+# 2. Run the optional live integration test with real OpenRouter API
+pytest -m live
 
-# Run mypy static type analysis
-make typecheck
+# 3. Run Ruff linter and code formatter checks
+ruff check app tests
+ruff format --check app tests
+
+# 4. Run mypy static type checking
+mypy app tests
 ```
+
+---
+
+## Common Errors & Troubleshooting
+
+| Error | Root Cause | Solution |
+|---|---|---|
+| `AuthenticationError: Invalid or missing OpenRouter API key` | `OPENROUTER_API_KEY` is empty, expired, or invalid. | Verify `OPENROUTER_API_KEY` in `.env` starts with `sk-or-v1-`. |
+| `LLMQuotaExceededError: OpenRouter rate limit or quota exceeded` | Out of credits or rate limit hit on chosen model. | Check balance at [openrouter.ai/credits](https://openrouter.ai/credits) or switch to a lower-cost model. |
+| `LLMTimeoutError: OpenRouter request timed out` | Upstream provider latency exceeded `OPENROUTER_TIMEOUT`. | Increase `OPENROUTER_TIMEOUT` in `.env` (e.g., `90.0` or `120.0`). |
+| `LLMResponseParsingError: Failed to parse LLM response into schema` | Model did not output valid JSON matching Pydantic schema. | Refine system prompt instructions or reduce `temperature` to `0.0`. |
+
 
 ---
 
@@ -211,3 +277,4 @@ make typecheck
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+

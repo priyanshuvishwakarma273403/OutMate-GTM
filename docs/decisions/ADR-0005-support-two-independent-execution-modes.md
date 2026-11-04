@@ -26,3 +26,4 @@ Both modes are powered by the identical shared service kernel.
 
 ### Negative
 - Requires designing tools and outputs to be equally consumable by autonomous agent loops and human-facing conversational hosts.
+

@@ -57,3 +57,4 @@ switch ($Command) {
         Write-Host "Usage: .\scripts\dev.ps1 [install|run|run-mcp|test|lint|format|typecheck]" -ForegroundColor Yellow
     }
 }
+

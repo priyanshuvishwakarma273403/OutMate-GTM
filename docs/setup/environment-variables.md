@@ -18,6 +18,8 @@ All configuration variables are loaded and validated through `app.core.config.Ap
 | `OPENROUTER_MODEL` | OpenRouter | Mode A | `"anthropic/claude-3.5-sonnet"` | Default model identifier for the standalone agent. |
 | `OPENROUTER_TIMEOUT` | OpenRouter | Mode A | `60.0` | Timeout in seconds for LLM inference calls before raising `LLMTimeoutError`. |
 | `OPENROUTER_MAX_RETRIES`| OpenRouter | Mode A | `3` | Number of automatic retries on network or rate limit errors. |
+| `OPENROUTER_MAX_TOKENS` | OpenRouter | Mode A | `None` | Optional hard limit on response generation token length. |
+| `OPENROUTER_TEMPERATURE`| OpenRouter | Mode A | `0.2` | Sampling temperature between 0.0 (deterministic) and 2.0. |
 | `NANGO_SECRET_KEY` | Nango | CRM Proxy | `None` | Secret key for Nango API (https://app.nango.dev). Required for CRM proxy calls. |
 | `NANGO_BASE_URL` | Nango | CRM Proxy | `"https://api.nango.dev"` | Host URL for Nango API and authorized proxy endpoints. |
 | `NANGO_CONNECTION_ID` | Nango | CRM Proxy | `None` | Tenant or user connection identifier in Nango for CRM integrations. |
@@ -45,3 +47,4 @@ To guarantee fast container cold-starts and seamless local testing:
 1. Missing keys for `OPENROUTER_*` do **NOT** fail application boot. They are validated only when `validate_openrouter()` is called as Mode A starts.
 2. Missing keys for `NANGO_*` do **NOT** fail application boot. They are validated only when third-party CRM exports are triggered.
 3. The `/ready` probe inspects and reports which subsystems are healthy or unconfigured without throwing unhandled exceptions or crashing the server.
+

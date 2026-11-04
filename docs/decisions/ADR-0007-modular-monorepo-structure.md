@@ -40,3 +40,4 @@ outmate-gtm/
 
 ### Negative
 - Monorepos require discipline to prevent unauthorized circular dependencies; enforced by Ruff and Mypy checks.
+

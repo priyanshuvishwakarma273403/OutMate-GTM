@@ -132,3 +132,4 @@ To connect Outmate tools directly to local desktop agents (such as Claude Deskto
 # macOS / Linux
 .venv/bin/python -m app.cli.main run-mcp
 ```
+

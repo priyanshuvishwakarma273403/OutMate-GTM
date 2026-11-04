@@ -51,3 +51,4 @@ To prevent architectural drift and system coupling, this document defines the ex
 - **Strict Constraints**:
   - Claude.ai interacts with Outmate solely as an external MCP client.
   - The remote MCP endpoint verifies caller authorization using Bearer token authentication before allowing tool execution.
+

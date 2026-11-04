@@ -19,3 +19,4 @@ We adopted the official **Model Context Protocol (MCP)** SDK (`mcp`) to standard
 
 ### Negative
 - Requires maintaining compliance with the evolving MCP specification.
+

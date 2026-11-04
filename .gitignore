@@ -65,3 +65,4 @@ dmypy.json
 
 # Docker
 *.docker.log
+

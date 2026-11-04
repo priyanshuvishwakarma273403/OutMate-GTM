@@ -5,6 +5,8 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
+from app.llm.base import TokenUsage
+
 T = TypeVar("T")
 
 
@@ -71,4 +73,23 @@ class ErrorResponse(BaseModel):
     error: ErrorDetail = Field(..., description="Detailed error information")
     timestamp: datetime = Field(
         default_factory=utc_now, description="Timestamp of error occurrence"
+    )
+
+
+class LLMTestResponse(BaseModel):
+    """Response model for LLM completion test endpoint."""
+
+    status: str = Field(default="success", description="Status indicator of the completion request")
+    model: str = Field(..., description="Model identifier that produced the completion")
+    content: str = Field(..., description="Generated text content from the language model")
+    usage: TokenUsage = Field(
+        default_factory=TokenUsage,
+        description="Token consumption metrics for the request",
+    )
+    duration_ms: float | None = Field(
+        default=None,
+        description="Round-trip request execution duration in milliseconds",
+    )
+    timestamp: datetime = Field(
+        default_factory=utc_now, description="Timestamp of completion response"
     )

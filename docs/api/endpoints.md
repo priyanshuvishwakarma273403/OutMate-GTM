@@ -10,6 +10,7 @@ Outmate GTM provides foundational HTTP endpoints for process monitoring, subsyst
 |---|---|---|---|
 | `GET` | `/health` | Health | Liveness probe indicating if the process is responsive. |
 | `GET` | `/ready` | Health | Readiness probe reporting status of configured dependencies without exposing credentials. |
+| `POST`| `/api/v1/llm/test` | LLM | Live OpenRouter completion test returning model metrics without credential exposure. |
 | `GET` | `/docs` | Documentation | Interactive Swagger UI API documentation. |
 | `GET` | `/redoc` | Documentation | ReDoc alternative API documentation. |
 | `GET` | `/openapi.json`| Documentation | Raw OpenAPI 3.1 schema specification. |
@@ -68,3 +69,35 @@ Outmate GTM provides foundational HTTP endpoints for process monitoring, subsyst
     }
   }
   ```
+
+### `POST /api/v1/llm/test`
+- **Purpose**: Test OpenRouter live LLM connectivity and token generation without exposing API credentials.
+- **Status Code**: `200 OK`
+- **Request Schema** (`LLMTestRequest`):
+  ```json
+  {
+    "message": "Explain B2B Go-To-Market strategy in one sentence.",
+    "system_prompt": "You are a senior GTM strategist.",
+    "temperature": 0.2,
+    "max_tokens": 100,
+    "model": "openai/gpt-4o-mini"
+  }
+  ```
+- **Response Schema** (`LLMTestResponse`):
+  ```json
+  {
+    "status": "success",
+    "model": "openai/gpt-4o-mini",
+    "content": "A B2B Go-To-Market strategy is an actionable plan defining how a company targets, acquires, and retains business customers.",
+    "usage": {
+      "prompt_tokens": 24,
+      "completion_tokens": 20,
+      "total_tokens": 44
+    },
+    "duration_ms": 320.5
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: `AuthenticationError` (invalid API key) or `LLMTimeoutError`.
+  - `422 Unprocessable Entity`: Input validation error (e.g. empty or missing `message`).
+

@@ -16,13 +16,13 @@ def test_default_config_loading() -> None:
     assert settings.app_env == "test"
     assert settings.app_host == "127.0.0.1"
     assert settings.app_port == 8000
-    assert settings.openrouter_model == "anthropic/claude-3.5-sonnet"
+    assert settings.openrouter_model == "openai/gpt-4o-mini"
 
 
 def test_allowed_origins_parsing() -> None:
     """Verify parsing comma-separated origins from environment string."""
     settings = AppSettings(
-        ALLOWED_ORIGINS="http://localhost:3000, https://app.outmate.ai",  # type: ignore[arg-type]
+        ALLOWED_ORIGINS="http://localhost:3000, https://app.outmate.ai",
     )
     assert settings.allowed_origins == [
         "http://localhost:3000",

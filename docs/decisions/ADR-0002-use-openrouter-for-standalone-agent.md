@@ -19,3 +19,4 @@ We chose **OpenRouter** as the unified gateway for the standalone Python AI agen
 
 ### Negative
 - Introduces an extra network hop to OpenRouter; however, latency overhead is minimal compared to model generation time.
+

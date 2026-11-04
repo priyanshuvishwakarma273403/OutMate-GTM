@@ -36,3 +36,35 @@ class CompanyLookupRequest(BaseModel):
     domain: str | None = Field(
         default=None, description="Optional known website domain to improve accuracy"
     )
+
+
+class LLMTestRequest(BaseModel):
+    """Request payload for testing OpenRouter LLM completions."""
+
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=4000,
+        examples=["Explain what a Go-To-Market strategy is in one sentence."],
+        description="User message or prompt to send to the model",
+    )
+    system_prompt: str | None = Field(
+        default=None,
+        description="Optional system instruction for guiding model behavior",
+    )
+    temperature: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=2.0,
+        description="Sampling temperature; defaults to configured environment value",
+    )
+    max_tokens: int | None = Field(
+        default=None,
+        ge=1,
+        le=8192,
+        description="Maximum completion tokens to generate",
+    )
+    model: str | None = Field(
+        default=None,
+        description="Optional model override; defaults to OPENROUTER_MODEL",
+    )

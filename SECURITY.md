@@ -43,3 +43,4 @@ If you discover a potential security vulnerability within Outmate GTM, please di
    - Release patch timeline coordinated with the reporter.
 
 Please do not disclose security issues publicly until a patch has been published.
+

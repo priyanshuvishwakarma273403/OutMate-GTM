@@ -83,3 +83,4 @@ flowchart TD
 - **Actions**:
   - If CRM sync is requested, format prospect data into target schema (e.g., HubSpot Contacts & Companies API).
   - Nango securely executes authorized POST requests into the connected CRM without exposing tokens.
+

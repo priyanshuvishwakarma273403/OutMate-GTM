@@ -38,9 +38,13 @@ class AppSettings(BaseSettings):
     openrouter_base_url: str = Field(
         default="https://openrouter.ai/api/v1", alias="OPENROUTER_BASE_URL"
     )
-    openrouter_model: str = Field(default="anthropic/claude-3.5-sonnet", alias="OPENROUTER_MODEL")
+    openrouter_model: str = Field(default="openai/gpt-4o-mini", alias="OPENROUTER_MODEL")
     openrouter_timeout: float = Field(default=60.0, alias="OPENROUTER_TIMEOUT")
     openrouter_max_retries: int = Field(default=3, alias="OPENROUTER_MAX_RETRIES")
+    openrouter_max_tokens: int | None = Field(default=None, alias="OPENROUTER_MAX_TOKENS")
+    openrouter_temperature: float = Field(
+        default=0.2, ge=0.0, le=2.0, alias="OPENROUTER_TEMPERATURE"
+    )
 
     # Nango Integration Configuration (OAuth Connection & Third-Party Proxy)
     nango_secret_key: str | None = Field(default=None, alias="NANGO_SECRET_KEY")
@@ -54,6 +58,7 @@ class AppSettings(BaseSettings):
         default="exa", alias="SEARCH_PROVIDER"
     )
     search_api_key: str | None = Field(default=None, alias="SEARCH_API_KEY")
+    tavily_api_key: str | None = Field(default=None, alias="TAVILY_API_KEY")
     search_api_base_url: str | None = Field(default=None, alias="SEARCH_API_BASE_URL")
     search_timeout: float = Field(default=30.0, alias="SEARCH_TIMEOUT")
 
@@ -66,7 +71,7 @@ class AppSettings(BaseSettings):
     mcp_auth_token: str | None = Field(default=None, alias="MCP_AUTH_TOKEN")
 
     # Security & Networking
-    allowed_origins: list[str] = Field(
+    allowed_origins: list[str] | str = Field(
         default=["http://localhost:3000", "http://127.0.0.1:3000"],
         alias="ALLOWED_ORIGINS",
     )
@@ -75,12 +80,30 @@ class AppSettings(BaseSettings):
     # Testing & Development Flags
     testing: bool = Field(default=False, alias="TESTING")
 
+    @field_validator("openrouter_max_tokens", mode="before")
+    @classmethod
+    def parse_optional_int(cls, v: Any) -> int | None:
+        """Parse optional integer, treating empty strings or whitespace as None."""
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return int(v)
+
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def parse_allowed_origins(cls, v: Any) -> list[str]:
-        """Parse comma-separated origins from environment variables."""
+        """Parse comma-separated origins or JSON lists from environment variables."""
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
+            v_trimmed = v.strip()
+            if v_trimmed.startswith("[") and v_trimmed.endswith("]"):
+                try:
+                    import json
+
+                    parsed = json.loads(v_trimmed)
+                    if isinstance(parsed, list):
+                        return [str(origin).strip() for origin in parsed]
+                except Exception:
+                    pass
+            return [origin.strip() for origin in v_trimmed.split(",") if origin.strip()]
         if isinstance(v, list):
             return [str(origin).strip() for origin in v]
         return ["*"] if v == "*" else []
@@ -104,7 +127,14 @@ class AppSettings(BaseSettings):
 
     def validate_search(self) -> None:
         """Validate search provider configuration when research services execute."""
-        if self.search_provider != "mock" and not self.search_api_key:
+        if self.search_provider == "mock":
+            return
+        if self.search_provider == "tavily":
+            if not (self.search_api_key or self.tavily_api_key):
+                raise ConfigurationError(
+                    "SEARCH_API_KEY or TAVILY_API_KEY is required when SEARCH_PROVIDER is 'tavily'."
+                )
+        elif not self.search_api_key:
             raise ConfigurationError(
                 f"SEARCH_API_KEY is required when SEARCH_PROVIDER is '{self.search_provider}'."
             )

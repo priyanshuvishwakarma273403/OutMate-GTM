@@ -87,3 +87,4 @@ mypy app tests
 2. Provide unit tests for new domain models, services, and integration clients.
 3. Provide contract tests for any added or modified MCP tools.
 4. Keep PRs scoped to a single capability or architectural improvement.
+

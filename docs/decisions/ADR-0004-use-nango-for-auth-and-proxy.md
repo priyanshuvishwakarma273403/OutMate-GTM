@@ -24,3 +24,4 @@ Nango is explicitly prohibited from participating in AI orchestration or MCP ser
 
 ### Negative
 - Relies on Nango Cloud or a self-hosted Nango instance for third-party sync operations.
+

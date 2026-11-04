@@ -25,3 +25,4 @@ All API endpoints, agent planners, and MCP tool handlers must delegate to these 
 
 ### Negative
 - Requires defining clean typed interfaces for every service before implementing tool handlers.
+

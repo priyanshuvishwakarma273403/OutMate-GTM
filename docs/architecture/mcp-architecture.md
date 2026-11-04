@@ -153,3 +153,4 @@ Outmate GTM plans five specialized GTM research tools:
   ```
 - **Output**: Structured `GTMReport` and executive Markdown string.
 - **Expected Errors**: `ServiceError`, `MCPValidationError`.
+

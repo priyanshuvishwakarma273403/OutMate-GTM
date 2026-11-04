@@ -1,6 +1,7 @@
 """OpenRouter adapter implementing BaseLLMClient via OpenAI-compatible SDK."""
 
 import json
+import time
 from typing import Any, TypeVar
 
 import openai
@@ -29,6 +30,21 @@ from app.llm.base import (
 logger = get_logger("llm.openrouter")
 
 T = TypeVar("T", bound=BaseModel)
+
+
+def _clean_json_content(content: str) -> str:
+    """Safely strip markdown code blocks and surrounding whitespace from JSON content."""
+    cleaned = content.strip()
+    if cleaned.startswith("```"):
+        lines = cleaned.splitlines()
+        # Remove opening fence (e.g. ```json or ```)
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        # Remove closing fence
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        cleaned = "\n".join(lines).strip()
+    return cleaned
 
 
 class OpenRouterClient(BaseLLMClient):
@@ -101,63 +117,97 @@ class OpenRouterClient(BaseLLMClient):
 
     def _handle_exception(self, exc: Exception) -> None:
         """Centralized exception handling for OpenAI/OpenRouter client errors."""
-        logger.error("OpenRouter API error encountered: %s", type(exc).__name__)
+        error_name = type(exc).__name__
+        logger.error("OpenRouter provider error: %s", error_name)
         if isinstance(exc, openai.APITimeoutError):
             raise LLMTimeoutError(
                 f"OpenRouter request timed out after {self.timeout}s",
-                details={"timeout": self.timeout},
+                details={"timeout": self.timeout, "provider_error": error_name},
             ) from exc
         if isinstance(exc, openai.RateLimitError):
             raise LLMQuotaExceededError(
                 "OpenRouter rate limit or quota exceeded",
-                details={"message": str(exc)},
+                details={"message": str(exc), "provider_error": error_name},
             ) from exc
         if isinstance(exc, openai.AuthenticationError):
             raise AuthenticationError(
                 "Invalid or missing OpenRouter API key",
-                details={"message": str(exc)},
+                details={"provider_error": error_name},
             ) from exc
         if isinstance(exc, openai.APIConnectionError):
             raise LLMProviderError(
                 "Failed to connect to OpenRouter gateway",
-                details={"message": str(exc)},
+                details={"provider_error": error_name},
+            ) from exc
+        if isinstance(exc, openai.BadRequestError):
+            raise LLMProviderError(
+                f"OpenRouter bad request: {exc.message}",
+                details={"code": exc.code, "provider_error": error_name},
+            ) from exc
+        if isinstance(exc, openai.InternalServerError):
+            raise LLMProviderError(
+                f"OpenRouter internal server error: {exc.message}",
+                details={"status_code": exc.status_code, "provider_error": error_name},
             ) from exc
         if isinstance(exc, openai.APIError):
             raise LLMProviderError(
                 f"OpenRouter returned API error: {exc.message}",
-                details={"code": exc.code, "message": exc.message},
+                details={"code": exc.code, "provider_error": error_name},
             ) from exc
-        raise LLMProviderError(f"Unexpected LLM failure: {exc}") from exc
+        raise LLMProviderError(
+            f"Unexpected LLM failure: {exc}",
+            details={"provider_error": error_name},
+        ) from exc
 
     async def generate_response(
         self,
         messages: list[LLMMessage],
         *,
-        temperature: float = 0.2,
+        temperature: float | None = None,
         max_tokens: int | None = None,
         model: str | None = None,
     ) -> LLMResponse:
         """Generate a standard conversational text response via OpenRouter."""
         self._ensure_configured()
         target_model = model or self.default_model
+        eff_temperature = (
+            temperature if temperature is not None else self.settings.openrouter_temperature
+        )
+        eff_max_tokens = (
+            max_tokens if max_tokens is not None else self.settings.openrouter_max_tokens
+        )
 
+        start_time = time.perf_counter()
         try:
             create_kwargs: dict[str, Any] = {
                 "model": target_model,
                 "messages": self._convert_messages(messages),
-                "temperature": temperature,
+                "temperature": eff_temperature,
             }
-            if max_tokens is not None:
-                create_kwargs["max_tokens"] = max_tokens
+            if eff_max_tokens is not None:
+                create_kwargs["max_tokens"] = eff_max_tokens
 
+            logger.info("Dispatching OpenRouter request to model '%s'", target_model)
             response = await self._client.chat.completions.create(**create_kwargs)
+            duration_ms = (time.perf_counter() - start_time) * 1000
+
             choice = response.choices[0]
+            usage = self._extract_usage(response.usage)
+            logger.info(
+                "OpenRouter response received in %.1fms (tokens: prompt=%d, completion=%d, total=%d)",
+                duration_ms,
+                usage.prompt_tokens,
+                usage.completion_tokens,
+                usage.total_tokens,
+            )
+
             return LLMResponse(
                 content=choice.message.content,
                 tool_calls=[],
-                usage=self._extract_usage(response.usage),
+                usage=usage,
                 finish_reason=choice.finish_reason or "stop",
                 model=response.model or target_model,
+                duration_ms=duration_ms,
             )
         except Exception as exc:
             self._handle_exception(exc)
@@ -168,12 +218,17 @@ class OpenRouterClient(BaseLLMClient):
         messages: list[LLMMessage],
         response_model: type[T],
         *,
-        temperature: float = 0.1,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
         model: str | None = None,
     ) -> StructuredLLMResponse[T]:
         """Generate structured response validated against a target Pydantic schema."""
         self._ensure_configured()
         target_model = model or self.default_model
+        eff_temperature = temperature if temperature is not None else 0.1
+        eff_max_tokens = (
+            max_tokens if max_tokens is not None else self.settings.openrouter_max_tokens
+        )
 
         # Inject JSON schema constraint instruction in system/user prompt
         schema_json = json.dumps(response_model.model_json_schema(), indent=2)
@@ -186,29 +241,47 @@ class OpenRouterClient(BaseLLMClient):
         )
         augmented_messages = [guidance_message] + messages[1:]
 
+        start_time = time.perf_counter()
         try:
             create_kwargs: dict[str, Any] = {
                 "model": target_model,
                 "messages": self._convert_messages(augmented_messages),
-                "temperature": temperature,
+                "temperature": eff_temperature,
                 "response_format": {"type": "json_object"},
             }
+            if eff_max_tokens is not None:
+                create_kwargs["max_tokens"] = eff_max_tokens
+
+            logger.info("Dispatching structured OpenRouter request to model '%s'", target_model)
             response = await self._client.chat.completions.create(**create_kwargs)
+            duration_ms = (time.perf_counter() - start_time) * 1000
+
             choice = response.choices[0]
             raw_content = choice.message.content or "{}"
+            cleaned_content = _clean_json_content(raw_content)
+
             try:
-                parsed_data = response_model.model_validate_json(raw_content)
+                parsed_data = response_model.model_validate_json(cleaned_content)
             except Exception as parse_exc:
+                logger.warning(
+                    "Model output failed schema validation for %s: %s",
+                    response_model.__name__,
+                    parse_exc,
+                )
                 raise LLMResponseParsingError(
                     f"Failed to parse LLM response into schema {response_model.__name__}",
                     details={"raw_content": raw_content, "error": str(parse_exc)},
                 ) from parse_exc
 
+            usage = self._extract_usage(response.usage)
+            logger.info("Structured OpenRouter response parsed in %.1fms", duration_ms)
+
             return StructuredLLMResponse(
                 parsed=parsed_data,
                 raw_content=raw_content,
-                usage=self._extract_usage(response.usage),
+                usage=usage,
                 model=response.model or target_model,
+                duration_ms=duration_ms,
             )
         except Exception as exc:
             if not isinstance(exc, LLMResponseParsingError):
@@ -220,22 +293,31 @@ class OpenRouterClient(BaseLLMClient):
         messages: list[LLMMessage],
         tools: list[ToolDefinition],
         *,
-        temperature: float = 0.2,
+        temperature: float | None = None,
         model: str | None = None,
     ) -> LLMResponse:
         """Evaluate messages against available tool definitions and return tool calls."""
         self._ensure_configured()
         target_model = model or self.default_model
+        eff_temperature = (
+            temperature if temperature is not None else self.settings.openrouter_temperature
+        )
 
+        start_time = time.perf_counter()
         try:
             create_kwargs: dict[str, Any] = {
                 "model": target_model,
                 "messages": self._convert_messages(messages),
                 "tools": self._convert_tools(tools),
                 "tool_choice": "auto",
-                "temperature": temperature,
+                "temperature": eff_temperature,
             }
+            if self.settings.openrouter_max_tokens is not None:
+                create_kwargs["max_tokens"] = self.settings.openrouter_max_tokens
+
             response = await self._client.chat.completions.create(**create_kwargs)
+            duration_ms = (time.perf_counter() - start_time) * 1000
+
             choice = response.choices[0]
             tool_calls: list[ToolCallRequest] = []
 
@@ -262,6 +344,7 @@ class OpenRouterClient(BaseLLMClient):
                 usage=self._extract_usage(response.usage),
                 finish_reason=choice.finish_reason or "tool_calls",
                 model=response.model or target_model,
+                duration_ms=duration_ms,
             )
         except Exception as exc:
             self._handle_exception(exc)
