@@ -4,7 +4,6 @@ import pytest
 from pydantic import BaseModel, Field
 
 from app.core.exceptions import (
-    MCPExecutionError,
     MCPToolNotFoundError,
     MCPValidationError,
 )

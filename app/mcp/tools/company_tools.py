@@ -76,7 +76,8 @@ async def get_company_profile_tool(
     if not report:
         raise MCPResourceNotFoundError("Company research report", input_data.research_reference)
 
-    validate_tenant_access(report.company.metadata, input_data.research_reference)
+    comp_meta = getattr(report.company, "metadata", getattr(report.company, "raw_metadata", {}))
+    validate_tenant_access(comp_meta, input_data.research_reference)
 
     output = GetCompanyProfileOutput(
         research_id=report.research_id,

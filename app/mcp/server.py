@@ -4,11 +4,11 @@ Exposes real company research, decision-maker discovery, public source verificat
 and report retrieval to Claude.ai and AI agents via local stdio and remote Streamable HTTP transports.
 """
 
-import sys
 from typing import Any
 
 from mcp.server.auth.settings import AuthSettings
 from mcp.server.mcpserver import MCPServer
+from pydantic import AnyHttpUrl, TypeAdapter
 from starlette.applications import Starlette
 
 from app.core.config import AppSettings, get_settings
@@ -35,11 +35,15 @@ class OutmateMCPServer:
         self.settings = settings or get_settings()
         self.config = config or MCPConfiguration(
             server_name=self.settings.mcp_server_name,
-            transport=self.settings.mcp_transport if self.settings.mcp_transport in ("stdio", "streamable_http") else "streamable_http",
+            transport=self.settings.mcp_transport
+            if self.settings.mcp_transport in ("stdio", "streamable_http")
+            else "streamable_http",
             host=self.settings.mcp_host,
             port=self.settings.mcp_port,
             bearer_token=self.settings.mcp_auth_token,
-            auth_mode="bearer" if (self.settings.mcp_auth_enabled and self.settings.mcp_auth_token) else "none",
+            auth_mode="bearer"
+            if (self.settings.mcp_auth_enabled and self.settings.mcp_auth_token)
+            else "none",
         )
         self.registry = registry or create_gtm_tool_registry()
 
@@ -47,12 +51,18 @@ class OutmateMCPServer:
         auth_settings: AuthSettings | None = None
         token_verifier: Any = None
 
+        url_adapter = TypeAdapter(AnyHttpUrl)
         if self.config.auth_mode == "bearer" and self.config.get_token_hash():
-            res_url = self.config.resource_server_url or f"http://{self.config.host}:{self.config.port}{self.config.endpoint}"
-            iss_url = self.config.oauth_issuer_url or f"http://{self.config.host}:{self.config.port}"
+            res_url = (
+                self.config.resource_server_url
+                or f"http://{self.config.host}:{self.config.port}{self.config.endpoint}"
+            )
+            iss_url = (
+                self.config.oauth_issuer_url or f"http://{self.config.host}:{self.config.port}"
+            )
             auth_settings = AuthSettings(
-                issuer_url=iss_url,
-                resource_server_url=res_url,
+                issuer_url=url_adapter.validate_python(iss_url),
+                resource_server_url=url_adapter.validate_python(res_url),
                 validate_token_resource=True,
                 required_scopes=self.config.required_scopes,
             )
@@ -60,15 +70,21 @@ class OutmateMCPServer:
             logger.info("MCP server configured with personal static bearer token verification")
 
         elif self.config.auth_mode == "oidc" and self.config.oauth_issuer_url:
-            res_url = self.config.resource_server_url or f"http://{self.config.host}:{self.config.port}{self.config.endpoint}"
+            res_url = (
+                self.config.resource_server_url
+                or f"http://{self.config.host}:{self.config.port}{self.config.endpoint}"
+            )
             auth_settings = AuthSettings(
-                issuer_url=self.config.oauth_issuer_url,
-                resource_server_url=res_url,
+                issuer_url=url_adapter.validate_python(self.config.oauth_issuer_url),
+                resource_server_url=url_adapter.validate_python(res_url),
                 validate_token_resource=True,
                 required_scopes=self.config.required_scopes,
             )
             token_verifier = OIDCTokenVerifier(self.config)
             logger.info("MCP server configured with OIDC JWT resource server verification")
+
+        self.token_verifier = token_verifier
+        self.auth_settings = auth_settings
 
         # Initialize official Python MCP Server instance
         self.mcp_app = MCPServer(
@@ -260,7 +276,9 @@ class OutmateMCPServer:
             name="find_decision_makers_prompt",
             description="Workflow prompt for discovering real verified executives and buying decision-makers",
         )
-        async def find_decision_makers_prompt(company_name: str, departments: str | None = None) -> str:
+        async def find_decision_makers_prompt(
+            company_name: str, departments: str | None = None
+        ) -> str:
             return (
                 f"Please identify active key decision-makers at '{company_name}' "
                 f"focusing on {departments or 'Executive and Engineering'} leadership. "
@@ -272,7 +290,9 @@ class OutmateMCPServer:
         return create_streamable_http_app(
             mcp_server=self.mcp_app,
             config=self.config,
-            allowed_origins=allowed_origins or self.settings.allowed_origins if isinstance(self.settings.allowed_origins, list) else None,
+            allowed_origins=allowed_origins or self.settings.allowed_origins
+            if isinstance(self.settings.allowed_origins, list)
+            else None,
         )
 
     # Alias for backward compatibility
@@ -288,6 +308,7 @@ class OutmateMCPServer:
             await self.run_stdio()
         else:
             import uvicorn
+
             app = self.get_streamable_http_app()
             uv_config = uvicorn.Config(
                 app,
@@ -296,13 +317,16 @@ class OutmateMCPServer:
                 log_level=self.config.log_level.lower(),
             )
             server = uvicorn.Server(uv_config)
-            logger.info("Starting Outmate MCP server on %s:%d via uvicorn...", self.config.host, self.config.port)
+            logger.info(
+                "Starting Outmate MCP server on %s:%d via uvicorn...",
+                self.config.host,
+                self.config.port,
+            )
             await server.serve()
 
 
 if __name__ == "__main__":
     import asyncio
-    import os
 
     settings = get_settings()
     server = OutmateMCPServer(settings=settings)

@@ -29,7 +29,9 @@ class StaticBearerTokenVerifier(TokenVerifier):
     async def verify_token(self, token: str) -> AccessToken | None:
         """Verify token against configured secret using constant-time comparison."""
         if not self._expected_hash or not token:
-            logger.warning("Bearer authentication rejected: no token configured or empty token provided")
+            logger.warning(
+                "Bearer authentication rejected: no token configured or empty token provided"
+            )
             return None
 
         provided_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
@@ -87,19 +89,23 @@ class OIDCTokenVerifier(TokenVerifier):
                 logger.warning("Malformed JWT bearer token rejected")
                 return None
 
-            import json
             import base64
+            import json
 
             # Decode payload safely for claim verification (signature verification handled by IdP / JWKS)
             payload_b64 = parts[1]
             # Add padding if needed
             payload_b64 += "=" * ((4 - len(payload_b64) % 4) % 4)
-            payload_data: dict[str, Any] = json.loads(base64.urlsafe_b64decode(payload_b64.encode("utf-8")))
+            payload_data: dict[str, Any] = json.loads(
+                base64.urlsafe_b64decode(payload_b64.encode("utf-8"))
+            )
 
             # 1. Validate Issuer
             token_iss = payload_data.get("iss")
             if token_iss != self.issuer_url:
-                logger.warning("JWT issuer mismatch: expected '%s', got '%s'", self.issuer_url, token_iss)
+                logger.warning(
+                    "JWT issuer mismatch: expected '%s', got '%s'", self.issuer_url, token_iss
+                )
                 return None
 
             # 2. Validate Audience / Resource
@@ -112,6 +118,7 @@ class OIDCTokenVerifier(TokenVerifier):
 
             # 3. Validate Expiration
             import time
+
             exp = payload_data.get("exp")
             if exp and exp < time.time():
                 logger.warning("JWT token is expired (exp=%s)", exp)
@@ -120,7 +127,9 @@ class OIDCTokenVerifier(TokenVerifier):
             # Extract scopes and tenant
             scopes_raw = payload_data.get("scope", "")
             scopes = scopes_raw.split() if isinstance(scopes_raw, str) else list(scopes_raw)
-            tenant_id = payload_data.get("tenant_id") or payload_data.get("org_id") or "default_tenant"
+            tenant_id = (
+                payload_data.get("tenant_id") or payload_data.get("org_id") or "default_tenant"
+            )
             user_id = payload_data.get("sub") or "anonymous_user"
 
             principal = PrincipalContext(

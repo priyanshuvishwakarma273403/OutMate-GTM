@@ -73,7 +73,9 @@ async def verify_person_tool(
         evidence_records=person.evidence,
     )
 
-    verif_status = VerificationStatus.VERIFIED if conf >= 0.8 else VerificationStatus.PARTIALLY_VERIFIED
+    verif_status = (
+        VerificationStatus.VERIFIED if conf >= 0.8 else VerificationStatus.PARTIALLY_VERIFIED
+    )
 
     output = VerifyPersonOutput(
         person_id=person.person_id,

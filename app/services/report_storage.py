@@ -37,6 +37,14 @@ class InMemoryReportRepository:
         """Retrieve company report by research_id."""
         return self._reports.get(research_id)
 
+    def get_report(self, research_id: str) -> CompanyResearchReport | None:
+        """Alias for get(research_id)."""
+        return self.get(research_id)
+
+    def save_report(self, report: CompanyResearchReport) -> None:
+        """Alias for save(report)."""
+        self.save(report)
+
     def save_decision_maker_report(self, report: DecisionMakerReport) -> None:
         """Store a completed decision-maker report."""
         if len(self._dm_reports) >= self.max_size:

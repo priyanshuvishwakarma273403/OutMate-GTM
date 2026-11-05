@@ -37,8 +37,9 @@ def create_streamable_http_app(
         host=config.host,
     )
 
-    # Add health probe route on /mcp/health or /ready
-    app.routes.append(Route("/mcp/health", mcp_health_check, methods=["GET"]))
+    # Add health probe routes at the beginning of the routing table
+    app.routes.insert(0, Route("/health", mcp_health_check, methods=["GET"]))
+    app.routes.insert(0, Route("/mcp/health", mcp_health_check, methods=["GET"]))
 
     # Configure CORS only if explicitly allowed origins are provided
     if allowed_origins:

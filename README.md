@@ -14,10 +14,19 @@ Both execution modes share the exact same domain models, service layer, verifica
 
 ## Current Project Status
 
-> **Phase 3: Production-Ready Decision Maker Discovery & Verification Engine** (Completed)
+> **Phase 4: Production-Grade MCP Server + MCP Client + Claude Connectivity** (Completed)
 >
-> Phase 1 (OpenRouter LLM Integration), Phase 2 (Real Company Research Engine), and Phase 3 (Decision Maker Discovery & Verification Engine) are completed and verified against live services.
-> The engine identifies real people holding commercial decision-making and purchasing influence within companies strictly from public evidence, categorizes buying personas (Economic Buyer, Technical Decision Maker, Procurement Stakeholder, Evaluator), verifies active vs. historical employment status, scores candidate buying relevance, and links every claim to public source citations.
+> All 4 phases are implemented, fully tested, and verified:
+> - **Phase 1**: OpenRouter LLM Integration (`app/llm/openrouter.py`, `app/services/llm.py`).
+> - **Phase 2**: Real Company Research Engine (`app/services/company_research.py`, domain resolution, SSRF protection).
+> - **Phase 3**: Decision Maker Discovery & Verification Engine (`app/services/people_research.py`, influence assessment).
+> - **Phase 4**: Production MCP Server & Client Infrastructure (`app/mcp/`):
+>   - 9 production MCP tools covering company intelligence, executive discovery, employment verification, and public evidence citations.
+>   - Dual transports: Local `stdio` (clean stdout/stderr separation) and remote **Streamable HTTP** (`/mcp`).
+>   - Claude.ai Custom Connector compatibility with personal Bearer token verification and enterprise OIDC/OAuth 2.1 RFC 8707 verification.
+>   - Reusable Python `OutmateMCPClient` supporting in-process, stdio, and Streamable HTTP execution.
+>   - Mode A Standalone Agent Orchestrator (`app/agent/orchestrator.py`) dynamically discovering and executing MCP tools.
+>   - Non-root containerization (`Dockerfile`, `docker-compose.yml`) and comprehensive documentation in `docs/mcp/`.
 
 ---
 

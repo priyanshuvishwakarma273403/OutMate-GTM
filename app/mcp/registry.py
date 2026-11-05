@@ -6,16 +6,17 @@ from typing import Any
 from mcp.types import Tool
 from pydantic import BaseModel, ValidationError
 
-from app.core.exceptions import (
+from app.core.exceptions import OutmateError
+from app.core.logging import get_logger
+from app.mcp.errors import (
     MCPExecutionError,
     MCPToolNotFoundError,
     MCPValidationError,
 )
-from app.core.logging import get_logger
 
 logger = get_logger("mcp.registry")
 
-HandlerType = Callable[[dict[str, Any]], Awaitable[BaseModel]]
+HandlerType = Callable[..., Awaitable[Any]]
 
 
 class MCPToolSpecification:

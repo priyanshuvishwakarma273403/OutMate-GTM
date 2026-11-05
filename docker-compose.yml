@@ -12,7 +12,11 @@ services:
       - APP_PORT=8000
       - LOG_LEVEL=INFO
       - OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
-      - MCP_TRANSPORT=sse
+      - MCP_TRANSPORT=streamable_http
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8000
+      - MCP_ENDPOINT=/mcp
+      - MCP_AUTH_MODE=none
     env_file:
       - path: .env
         required: false

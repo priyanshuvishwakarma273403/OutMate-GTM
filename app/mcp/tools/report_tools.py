@@ -30,7 +30,8 @@ async def get_research_sources_tool(
     if not report:
         raise MCPResourceNotFoundError("Company research report", input_data.research_reference)
 
-    validate_tenant_access(report.company.metadata, input_data.research_reference)
+    comp_meta = getattr(report.company, "metadata", getattr(report.company, "raw_metadata", {}))
+    validate_tenant_access(comp_meta, input_data.research_reference)
 
     output = GetResearchSourcesOutput(
         research_reference=input_data.research_reference,
@@ -87,7 +88,10 @@ async def get_research_report_tool(
     # Check company research reports first
     company_report = repository.get_report(input_data.research_reference)
     if company_report:
-        validate_tenant_access(company_report.company.metadata, input_data.research_reference)
+        comp_meta = getattr(
+            company_report.company, "metadata", getattr(company_report.company, "raw_metadata", {})
+        )
+        validate_tenant_access(comp_meta, input_data.research_reference)
         return GetResearchReportOutput(
             research_id=company_report.research_id,
             report_type="company",

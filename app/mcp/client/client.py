@@ -14,12 +14,12 @@ from app.core.config import AppSettings, get_settings
 from app.core.logging import get_logger
 from app.llm.base import ToolDefinition
 from app.mcp.client.errors import (
-    MCPClientError,
     MCPConnectionError,
     MCPToolExecutionError,
     MCPTransportError,
 )
 from app.mcp.registry import MCPToolRegistry
+from app.mcp.schemas.common import MCPToolResult
 from app.mcp.tools import create_gtm_tool_registry
 
 logger = get_logger("mcp.client")
@@ -31,6 +31,7 @@ class OutmateMCPClient:
     def __init__(
         self,
         transport: Literal["in_process", "stdio", "streamable_http"] = "in_process",
+        transport_mode: Literal["in_process", "stdio", "streamable_http"] | None = None,
         server_url: str | None = None,
         auth_token: str | None = None,
         stdio_command: str = "python",
@@ -40,7 +41,7 @@ class OutmateMCPClient:
         settings: AppSettings | None = None,
         timeout: float = 60.0,
     ) -> None:
-        self.transport_type = transport
+        self.transport_type = transport_mode or transport
         self.server_url = server_url or "http://127.0.0.1:8000/mcp"
         self.auth_token = auth_token
         self.stdio_command = stdio_command
@@ -73,7 +74,9 @@ class OutmateMCPClient:
 
         try:
             if self.transport_type == "stdio":
-                logger.info("Connecting OutmateMCPClient via stdio subprocess (%s)...", self.stdio_command)
+                logger.info(
+                    "Connecting OutmateMCPClient via stdio subprocess (%s)...", self.stdio_command
+                )
                 server_params = StdioServerParameters(
                     command=self.stdio_command,
                     args=self.stdio_args,
@@ -84,7 +87,9 @@ class OutmateMCPClient:
                 )
 
             elif self.transport_type == "streamable_http":
-                logger.info("Connecting OutmateMCPClient via Streamable HTTP (%s)...", self.server_url)
+                logger.info(
+                    "Connecting OutmateMCPClient via Streamable HTTP (%s)...", self.server_url
+                )
                 headers = {}
                 if self.auth_token:
                     headers["Authorization"] = f"Bearer {self.auth_token}"
@@ -103,12 +108,20 @@ class OutmateMCPClient:
 
             init_result = await self._session.initialize()
             self._server_info = {
-                "name": init_result.server_info.name if hasattr(init_result, "server_info") else "mcp-server",
-                "version": init_result.server_info.version if hasattr(init_result, "server_info") else "0.1.0",
+                "name": init_result.server_info.name
+                if hasattr(init_result, "server_info")
+                else "mcp-server",
+                "version": init_result.server_info.version
+                if hasattr(init_result, "server_info")
+                else "0.1.0",
                 "protocol_version": getattr(init_result, "protocol_version", "2024-11-05"),
             }
             self._connected = True
-            logger.info("MCP client connected to %s (%s)", self._server_info.get("name"), self.transport_type)
+            logger.info(
+                "MCP client connected to %s (%s)",
+                self._server_info.get("name"),
+                self.transport_type,
+            )
 
         except Exception as exc:
             logger.error("Failed to connect MCP client over %s: %s", self.transport_type, exc)
@@ -148,19 +161,26 @@ class OutmateMCPClient:
             )
         return tool_definitions
 
-    async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> MCPToolResult:
         """Execute a tool on the MCP server and return validated structured results."""
         if not self._connected:
             await self.connect()
 
         if self.transport_type == "in_process":
             logger.info("Invoking tool '%s' via in-process registry", tool_name)
-            return await self._registry.execute(tool_name, arguments)
+            raw = await self._registry.execute(tool_name, arguments)
+            return MCPToolResult(
+                success=True,
+                message=f"Executed tool '{tool_name}' successfully",
+                data=raw,
+            )
 
         if not self._session:
             raise MCPTransportError("Client session is not active")
 
-        logger.info("Invoking remote MCP tool '%s' with arguments: %s", tool_name, list(arguments.keys()))
+        logger.info(
+            "Invoking remote MCP tool '%s' with arguments: %s", tool_name, list(arguments.keys())
+        )
         try:
             result = await self._session.call_tool(tool_name, arguments)
             if result.is_error:
@@ -171,23 +191,28 @@ class OutmateMCPClient:
 
             # Prefer structured content when provided by server
             if hasattr(result, "structured_content") and result.structured_content:
-                if isinstance(result.structured_content, dict):
-                    return result.structured_content
-                return dict(result.structured_content)
+                data = (
+                    result.structured_content
+                    if isinstance(result.structured_content, dict)
+                    else dict(result.structured_content)
+                )
+                return MCPToolResult(success=True, data=data)
 
             # Parse content blocks
             if result.content:
                 for block in result.content:
                     if hasattr(block, "text") and block.text:
                         text = block.text.strip()
-                        if (text.startswith("{") and text.endswith("}")) or (text.startswith("[") and text.endswith("]")):
+                        if (text.startswith("{") and text.endswith("}")) or (
+                            text.startswith("[") and text.endswith("]")
+                        ):
                             try:
-                                return json.loads(text)
+                                return MCPToolResult(success=True, data=json.loads(text))
                             except Exception:
                                 pass
-                        return {"text": text}
+                        return MCPToolResult(success=True, data={"text": text})
 
-            return {}
+            return MCPToolResult(success=True, data={})
 
         except MCPToolExecutionError:
             raise
@@ -199,7 +224,9 @@ class OutmateMCPClient:
         """Return server identification and protocol capabilities."""
         if not self._connected:
             await self.connect()
-        return self._server_info
+        info = dict(self._server_info)
+        info.setdefault("capabilities", ["tools", "resources", "prompts"])
+        return info
 
     async def health_check(self) -> bool:
         """Verify server responsiveness."""

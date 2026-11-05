@@ -22,14 +22,15 @@ class PrincipalContext:
         return required_scope in self.scopes or "*" in self.scopes
 
 
-_current_principal: ContextVar[PrincipalContext] = ContextVar(
-    "current_principal", default=PrincipalContext()
+_current_principal: ContextVar[PrincipalContext | None] = ContextVar(
+    "current_principal", default=None
 )
 
 
 def get_current_principal() -> PrincipalContext:
     """Retrieve principal context for the active async request execution."""
-    return _current_principal.get()
+    principal = _current_principal.get()
+    return principal if principal is not None else PrincipalContext()
 
 
 def set_current_principal(principal: PrincipalContext) -> None:

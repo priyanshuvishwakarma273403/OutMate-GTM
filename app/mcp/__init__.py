@@ -1,6 +1,6 @@
 """Model Context Protocol (MCP) server, client, schemas, auth, and tool registry."""
 
-from app.mcp.configuration import MCPConfiguration
+from app.mcp.configuration import MCPAuthMode, MCPConfiguration
 from app.mcp.context import PrincipalContext, get_current_principal, set_current_principal
 from app.mcp.errors import (
     MCPAuthenticationError,
@@ -57,6 +57,7 @@ __all__ = [
     "GetResearchSourcesOutput",
     "MCPAuthenticationError",
     "MCPAuthorizationError",
+    "MCPAuthMode",
     "MCPConfiguration",
     "MCPError",
     "MCPResourceNotFoundError",

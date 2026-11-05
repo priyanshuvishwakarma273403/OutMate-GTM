@@ -63,4 +63,3 @@ def test_classify_preserves_raw_title() -> None:
     assert role.raw_title == raw
     assert role.seniority == SeniorityLevel.DIRECTOR
     assert role.department == Department.ENGINEERING
-

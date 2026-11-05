@@ -114,4 +114,3 @@ def test_verify_empty_evidence() -> None:
 
     assert status == EmploymentStatus.EMPLOYMENT_NOT_VERIFIED
     assert confidence == 0.0
-

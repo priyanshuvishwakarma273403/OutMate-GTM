@@ -29,6 +29,7 @@ class EvidenceSourceType(StrEnum):
     JOB_POSTING = "job_posting"
     CONFERENCE_TALK = "conference_talk"
     PUBLIC_REGISTRY = "public_registry"
+    HUBSPOT_CRM = "hubspot_crm"
     OTHER = "other"
 
 

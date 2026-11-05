@@ -7,7 +7,6 @@ from app.domain.models import (
 )
 from app.mcp import (
     FindDecisionMakersInput,
-    FindDecisionMakersOutput,
     GenerateGTMReportInput,
     GenerateGTMReportOutput,
     GetCompanyProfileInput,
@@ -15,19 +14,16 @@ from app.mcp import (
     GetDecisionMakerSourcesInput,
     GetDecisionMakerSourcesOutput,
     GetPersonDetailsInput,
-    GetPersonDetailsOutput,
     GetResearchReportInput,
     GetResearchReportOutput,
     GetResearchSourcesInput,
     GetResearchSourcesOutput,
     ResearchCompanyInput,
-    ResearchCompanyOutput,
     SearchCompanyInput,
     SearchCompanyOutput,
     VerifyPersonInput,
     VerifyPersonOutput,
 )
-from app.schemas.responses import CompanyResearchReport, DecisionMakerReport
 
 
 def test_search_company_contract() -> None:
@@ -37,13 +33,15 @@ def test_search_company_contract() -> None:
     assert input_data.domain == "vercel.com"
     assert input_data.limit == 5
 
-    output = SearchCompanyOutput(query="\"Vercel\" site:vercel.com", results=[], total_results=0)
+    output = SearchCompanyOutput(query='"Vercel" site:vercel.com', results=[], total_results=0)
     assert output.total_results == 0
 
 
 def test_research_company_contract() -> None:
     """Verify research_company input schema contract."""
-    input_data = ResearchCompanyInput(company_name="Vercel", company_domain="vercel.com", research_depth="standard")
+    input_data = ResearchCompanyInput(
+        company_name="Vercel", company_domain="vercel.com", research_depth="standard"
+    )
     assert input_data.company_name == "Vercel"
     assert input_data.company_domain == "vercel.com"
     assert input_data.research_depth == "standard"
@@ -111,12 +109,18 @@ def test_get_sources_contracts() -> None:
     """Verify source provenance input and output contracts."""
     company_sources_in = GetResearchSourcesInput(research_reference="res_123")
     assert company_sources_in.research_reference == "res_123"
-    company_sources_out = GetResearchSourcesOutput(research_reference="res_123", total_sources=0, sources=[])
+    company_sources_out = GetResearchSourcesOutput(
+        research_reference="res_123", total_sources=0, sources=[]
+    )
     assert company_sources_out.total_sources == 0
 
-    dm_sources_in = GetDecisionMakerSourcesInput(research_reference="res_123", person_reference="dm_456")
+    dm_sources_in = GetDecisionMakerSourcesInput(
+        research_reference="res_123", person_reference="dm_456"
+    )
     assert dm_sources_in.person_reference == "dm_456"
-    dm_sources_out = GetDecisionMakerSourcesOutput(research_reference="res_123", person_reference="dm_456", total_sources=0, sources=[])
+    dm_sources_out = GetDecisionMakerSourcesOutput(
+        research_reference="res_123", person_reference="dm_456", total_sources=0, sources=[]
+    )
     assert dm_sources_out.total_sources == 0
 
 

@@ -18,14 +18,18 @@ class GetResearchSourcesOutput(BaseModel):
 
     research_reference: str = Field(..., description="Research run ID")
     total_sources: int = Field(..., description="Count of retrieved evidence items")
-    sources: list[EvidenceRecord] = Field(default_factory=list, description="Verifiable public evidence citations")
+    sources: list[EvidenceRecord] = Field(
+        default_factory=list, description="Verifiable public evidence citations"
+    )
 
 
 class GetDecisionMakerSourcesInput(BaseModel):
     """Input parameters for retrieving sources backing decision-maker discovery."""
 
     research_reference: str = Field(..., min_length=1, description="Decision-maker research run ID")
-    person_reference: str | None = Field(default=None, description="Optional person_id to filter evidence for")
+    person_reference: str | None = Field(
+        default=None, description="Optional person_id to filter evidence for"
+    )
 
 
 class GetDecisionMakerSourcesOutput(BaseModel):
@@ -34,7 +38,9 @@ class GetDecisionMakerSourcesOutput(BaseModel):
     research_reference: str = Field(..., description="Research run ID")
     person_reference: str | None = Field(default=None, description="Target person_id if filtered")
     total_sources: int = Field(..., description="Count of retrieved evidence items")
-    sources: list[EvidenceRecord] = Field(default_factory=list, description="Supporting evidence citations")
+    sources: list[EvidenceRecord] = Field(
+        default_factory=list, description="Supporting evidence citations"
+    )
 
 
 class GetResearchReportInput(BaseModel):
@@ -54,8 +60,12 @@ class GetResearchReportOutput(BaseModel):
 class GenerateGTMReportInput(BaseModel):
     """Input parameters for generate_gtm_report MCP tool."""
 
-    query: str = Field(..., min_length=3, description="Original GTM research query or campaign objective")
-    company: dict[str, Any] = Field(..., description="Researched company profile to feature in report")
+    query: str = Field(
+        ..., min_length=3, description="Original GTM research query or campaign objective"
+    )
+    company: dict[str, Any] = Field(
+        ..., description="Researched company profile to feature in report"
+    )
     decision_makers: list[dict[str, Any]] = Field(
         default_factory=list,
         description="Ranked list of evaluated decision-makers with relevance scores",

@@ -7,11 +7,13 @@ from app.mcp.client.errors import (
     MCPToolExecutionError,
     MCPTransportError,
 )
+from app.mcp.errors import MCPToolNotFoundError
 
 __all__ = [
     "MCPClientError",
     "MCPConnectionError",
     "MCPToolExecutionError",
+    "MCPToolNotFoundError",
     "MCPTransportError",
     "OutmateMCPClient",
 ]

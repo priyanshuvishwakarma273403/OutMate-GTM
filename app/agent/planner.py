@@ -36,8 +36,12 @@ class LLMDecompositionSchema(BaseModel):
     """Schema for LLM structured query extraction."""
 
     target_company: str = Field(..., description="Name of the company to research")
-    target_domain: str | None = Field(default=None, description="Domain name if explicitly mentioned")
-    seniority_levels: list[str] = Field(default_factory=list, description="Extracted seniority levels")
+    target_domain: str | None = Field(
+        default=None, description="Domain name if explicitly mentioned"
+    )
+    seniority_levels: list[str] = Field(
+        default_factory=list, description="Extracted seniority levels"
+    )
     departments: list[str] = Field(default_factory=list, description="Extracted departments")
 
 
@@ -75,7 +79,7 @@ class ResearchPlanner(BasePlanner):
                     response_model=LLMDecompositionSchema,
                     temperature=0.1,
                 )
-                extracted = res.data
+                extracted = res.parsed
                 company = extracted.target_company.strip().strip("\"'")
                 if company and company.lower() != "unknown":
                     seniority = self._map_seniority(extracted.seniority_levels)
@@ -110,7 +114,9 @@ class ResearchPlanner(BasePlanner):
         clean = query.strip()
 
         # Check for explicit domain (e.g. vercel.com)
-        domain_match = re.search(r"\b([a-zA-Z0-9-]+\.(?:com|io|ai|co|org|net|dev|app))\b", clean, re.IGNORECASE)
+        domain_match = re.search(
+            r"\b([a-zA-Z0-9-]+\.(?:com|io|ai|co|org|net|dev|app))\b", clean, re.IGNORECASE
+        )
         domain = domain_match.group(1).lower() if domain_match else None
 
         # Common patterns:
@@ -126,7 +132,9 @@ class ResearchPlanner(BasePlanner):
             if m:
                 extracted = m.group(1).strip()
                 # Clean up words like "and find..."
-                extracted = re.split(r"\s+(?:and|with|to|for|who)\s+", extracted, flags=re.IGNORECASE)[0]
+                extracted = re.split(
+                    r"\s+(?:and|with|to|for|who)\s+", extracted, flags=re.IGNORECASE
+                )[0]
                 if extracted and len(extracted) > 1:
                     return extracted, domain
 
@@ -170,7 +178,21 @@ class ResearchPlanner(BasePlanner):
         """Heuristically identify requested seniority tiers."""
         q = query.lower()
         levels = []
-        if any(term in q for term in ["ceo", "cto", "cfo", "cro", "cpo", "cio", "ciso", "c-level", "chief", "founder"]):
+        if any(
+            term in q
+            for term in [
+                "ceo",
+                "cto",
+                "cfo",
+                "cro",
+                "cpo",
+                "cio",
+                "ciso",
+                "c-level",
+                "chief",
+                "founder",
+            ]
+        ):
             levels.append(SeniorityLevel.C_LEVEL)
         if any(term in q for term in ["vp", "vice president", "svp", "evp"]):
             levels.append(SeniorityLevel.VP)
@@ -186,7 +208,9 @@ class ResearchPlanner(BasePlanner):
         """Heuristically identify requested department functions."""
         q = query.lower()
         deps = []
-        if any(term in q for term in ["engineering", "tech", "technology", "developer", "software"]):
+        if any(
+            term in q for term in ["engineering", "tech", "technology", "developer", "software"]
+        ):
             deps.append(Department.ENGINEERING)
         if any(term in q for term in ["product", "product management"]):
             deps.append(Department.PRODUCT)

@@ -14,7 +14,8 @@ class FindDecisionMakersInput(BaseModel):
     company_name: str = Field(..., min_length=2, max_length=200, description="Target company name")
     company_domain: str | None = Field(default=None, description="Optional target corporate domain")
     product_context: str | None = Field(
-        default=None, description="Commercial solution or product context for purchasing persona alignment"
+        default=None,
+        description="Commercial solution or product context for purchasing persona alignment",
     )
     target_departments: list[str] = Field(
         default_factory=list, description="Targeted departments (e.g. ['engineering', 'executive'])"
@@ -23,9 +24,12 @@ class FindDecisionMakersInput(BaseModel):
         default_factory=list, description="Specific job roles targeted (e.g. ['VP of Engineering'])"
     )
     seniority_levels: list[str] = Field(
-        default_factory=list, description="Targeted seniority tiers (e.g. ['c_level', 'vp', 'head'])"
+        default_factory=list,
+        description="Targeted seniority tiers (e.g. ['c_level', 'vp', 'head'])",
     )
-    discovery_limit: int = Field(default=10, ge=1, le=50, description="Maximum number of prospects to return")
+    discovery_limit: int = Field(
+        default=10, ge=1, le=50, description="Maximum number of prospects to return"
+    )
     research_depth: Literal["standard", "deep"] = Field(
         default="standard", description="Search and retrieval depth"
     )
@@ -40,8 +44,12 @@ class FindDecisionMakersOutput(BaseModel):
 class VerifyPersonInput(BaseModel):
     """Input parameters for verifying a discovered person's employment and identity."""
 
-    research_reference: str = Field(..., min_length=1, description="Research run ID where person was discovered")
-    person_reference: str = Field(..., min_length=1, description="Unique person_id of the candidate")
+    research_reference: str = Field(
+        ..., min_length=1, description="Research run ID where person was discovered"
+    )
+    person_reference: str = Field(
+        ..., min_length=1, description="Unique person_id of the candidate"
+    )
 
 
 class VerifyPersonOutput(BaseModel):
@@ -59,8 +67,12 @@ class VerifyPersonOutput(BaseModel):
 class GetPersonDetailsInput(BaseModel):
     """Input parameters for retrieving full evidence-backed profile of a discovered decision-maker."""
 
-    research_reference: str = Field(..., min_length=1, description="Research run ID where person was discovered")
-    person_reference: str = Field(..., min_length=1, description="Unique person_id of the candidate")
+    research_reference: str = Field(
+        ..., min_length=1, description="Research run ID where person was discovered"
+    )
+    person_reference: str = Field(
+        ..., min_length=1, description="Unique person_id of the candidate"
+    )
 
 
 class GetPersonDetailsOutput(BaseModel):
