@@ -1,4 +1,4 @@
-"""Unit tests for MCP tool registry, schema validation, and tool contracts."""
+"""Unit tests for MCP tool registry, schema validation, and tool specifications."""
 
 import pytest
 from pydantic import BaseModel, Field
@@ -15,18 +15,22 @@ from app.mcp import (
 )
 
 
-def test_gtm_registry_contains_all_five_tools() -> None:
-    """Verify default registry is populated with exactly the 5 specified GTM tools."""
+def test_gtm_registry_contains_all_nine_tools() -> None:
+    """Verify default registry is populated with exactly the 9 specified GTM tools."""
     registry = create_gtm_tool_registry()
     tools = registry.list_tools()
     tool_names = [t.name for t in tools]
 
-    assert len(tools) == 5
+    assert len(tools) == 9
     assert "search_company" in tool_names
+    assert "research_company" in tool_names
+    assert "get_company_profile" in tool_names
     assert "find_decision_makers" in tool_names
-    assert "get_person_details" in tool_names
     assert "verify_person" in tool_names
-    assert "generate_gtm_report" in tool_names
+    assert "get_person_details" in tool_names
+    assert "get_research_sources" in tool_names
+    assert "get_decision_maker_sources" in tool_names
+    assert "get_research_report" in tool_names
 
 
 def test_tool_specification_metadata() -> None:
@@ -35,8 +39,8 @@ def test_tool_specification_metadata() -> None:
     tool = registry.get_tool("search_company")
 
     assert tool.name == "search_company"
-    assert "CompanyResearchService" in tool.service_dependency
-    assert "SearchProvider" in (tool.external_integration_dependency or "")
+    assert "SearchClient.search" in tool.service_dependency
+    assert tool.required_scope is not None
     assert len(tool.expected_errors) >= 2
 
 
@@ -45,7 +49,7 @@ def test_sdk_tool_conversion() -> None:
     registry = create_gtm_tool_registry()
     sdk_tools = registry.list_sdk_tools()
 
-    assert len(sdk_tools) == 5
+    assert len(sdk_tools) == 9
     first_tool = sdk_tools[0]
     assert hasattr(first_tool, "name")
     assert hasattr(first_tool, "input_schema")
@@ -56,7 +60,7 @@ async def test_tool_execution_input_validation() -> None:
     """Verify MCPValidationError is raised when required arguments are missing."""
     registry = create_gtm_tool_registry()
 
-    # search_company requires company_name
+    # search_company requires query
     with pytest.raises(MCPValidationError):
         await registry.execute("search_company", {})
 
@@ -67,14 +71,6 @@ async def test_unknown_tool_invocation() -> None:
 
     with pytest.raises(MCPToolNotFoundError, match="is not registered"):
         await registry.execute("non_existent_tool", {})
-
-
-async def test_phase_1_tool_handler_not_implemented() -> None:
-    """Verify executing a Phase 1 tool specification without registered handler raises MCPExecutionError."""
-    registry = create_gtm_tool_registry()
-
-    with pytest.raises(MCPExecutionError, match="Phase 1 specification but has no handler"):
-        await registry.execute("search_company", {"company_name": "Vercel"})
 
 
 async def test_custom_handler_execution() -> None:

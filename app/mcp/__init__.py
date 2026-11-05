@@ -1,36 +1,80 @@
-"""Model Context Protocol (MCP) server, client, schemas, and tools."""
+"""Model Context Protocol (MCP) server, client, schemas, auth, and tool registry."""
 
-from app.mcp.client import OutmateMCPClient
+from app.mcp.configuration import MCPConfiguration
+from app.mcp.context import PrincipalContext, get_current_principal, set_current_principal
+from app.mcp.errors import (
+    MCPAuthenticationError,
+    MCPAuthorizationError,
+    MCPError,
+    MCPResourceNotFoundError,
+    MCPToolNotFoundError,
+    MCPValidationError,
+)
 from app.mcp.registry import MCPToolRegistry, MCPToolSpecification
 from app.mcp.schemas import (
     FindDecisionMakersInput,
     FindDecisionMakersOutput,
     GenerateGTMReportInput,
     GenerateGTMReportOutput,
+    GetCompanyProfileInput,
+    GetCompanyProfileOutput,
+    GetDecisionMakerSourcesInput,
+    GetDecisionMakerSourcesOutput,
     GetPersonDetailsInput,
     GetPersonDetailsOutput,
+    GetResearchReportInput,
+    GetResearchReportOutput,
+    GetResearchSourcesInput,
+    GetResearchSourcesOutput,
+    MCPToolResult,
+    ResearchCompanyInput,
+    ResearchCompanyOutput,
     SearchCompanyInput,
     SearchCompanyOutput,
     VerifyPersonInput,
     VerifyPersonOutput,
 )
+from app.mcp.scopes import ALL_SCOPES, MCPScopes
 from app.mcp.server import OutmateMCPServer
-from app.mcp.tools import create_gtm_tool_registry
+from app.mcp.tools import ALL_GTM_TOOL_SPECS, create_gtm_tool_registry
 
 __all__ = [
+    "ALL_GTM_TOOL_SPECS",
+    "ALL_SCOPES",
     "FindDecisionMakersInput",
     "FindDecisionMakersOutput",
     "GenerateGTMReportInput",
     "GenerateGTMReportOutput",
+    "GetCompanyProfileInput",
+    "GetCompanyProfileOutput",
+    "GetDecisionMakerSourcesInput",
+    "GetDecisionMakerSourcesOutput",
     "GetPersonDetailsInput",
     "GetPersonDetailsOutput",
+    "GetResearchReportInput",
+    "GetResearchReportOutput",
+    "GetResearchSourcesInput",
+    "GetResearchSourcesOutput",
+    "MCPAuthenticationError",
+    "MCPAuthorizationError",
+    "MCPConfiguration",
+    "MCPError",
+    "MCPResourceNotFoundError",
+    "MCPScopes",
     "MCPToolRegistry",
+    "MCPToolResult",
     "MCPToolSpecification",
-    "OutmateMCPClient",
+    "MCPToolNotFoundError",
+    "MCPValidationError",
     "OutmateMCPServer",
+    "PrincipalContext",
+    "ResearchCompanyInput",
+    "ResearchCompanyOutput",
     "SearchCompanyInput",
     "SearchCompanyOutput",
     "VerifyPersonInput",
     "VerifyPersonOutput",
     "create_gtm_tool_registry",
+    "get_current_principal",
+    "set_current_principal",
 ]

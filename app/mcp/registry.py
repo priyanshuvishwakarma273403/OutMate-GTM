@@ -28,8 +28,10 @@ class MCPToolSpecification:
         input_model: type[BaseModel],
         output_model: type[BaseModel],
         service_dependency: str,
-        external_integration_dependency: str | None,
-        expected_errors: list[str],
+        external_integration_dependency: str | None = None,
+        expected_errors: list[str] | None = None,
+        title: str = "",
+        required_scope: str | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -37,7 +39,9 @@ class MCPToolSpecification:
         self.output_model = output_model
         self.service_dependency = service_dependency
         self.external_integration_dependency = external_integration_dependency
-        self.expected_errors = expected_errors
+        self.expected_errors = expected_errors or []
+        self.title = title or name.replace("_", " ").title()
+        self.required_scope = required_scope
 
     def to_mcp_tool(self) -> Tool:
         """Convert specification into official MCP SDK Tool definition."""
@@ -112,6 +116,8 @@ class MCPToolRegistry:
             if isinstance(result, BaseModel):
                 return result.model_dump(mode="json")
             return dict(result)
+        except OutmateError:
+            raise
         except Exception as exc:
             logger.error("Unhandled error executing tool %s: %s", name, exc)
             raise MCPExecutionError(

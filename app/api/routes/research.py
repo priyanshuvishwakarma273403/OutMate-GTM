@@ -2,8 +2,14 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.agent.orchestrator import AgentOrchestrator
 from app.core.logging import get_logger
-from app.schemas.requests import CompanyPreviewRequest, CompanyResearchRequest
+from app.domain.models.report import GTMReport
+from app.schemas.requests import (
+    CompanyPreviewRequest,
+    CompanyResearchRequest,
+    ResearchQueryRequest,
+)
 from app.schemas.responses import (
     CompanyPreviewResponse,
     CompanyResearchReport,
@@ -28,6 +34,30 @@ def get_research_service() -> CompanyResearchService:
 def get_repository() -> InMemoryReportRepository:
     """Dependency provider returning the report repository."""
     return get_report_repository()
+
+
+def get_agent_orchestrator() -> AgentOrchestrator:
+    """Dependency provider returning an instantiated AgentOrchestrator."""
+    return AgentOrchestrator()
+
+
+@router.post(
+    "/agent",
+    response_model=GTMReport,
+    status_code=status.HTTP_200_OK,
+    summary="Execute Mode A autonomous agent research via MCP",
+    description=(
+        "Executes end-to-end natural-language GTM research coordinating tool execution "
+        "via OutmateMCPClient."
+    ),
+)
+async def agent_research_endpoint(
+    request: ResearchQueryRequest,
+    orchestrator: AgentOrchestrator = Depends(get_agent_orchestrator),
+) -> GTMReport:
+    """Execute Mode A autonomous agent research pipeline."""
+    logger.info("Received autonomous agent research request for: '%s'", request.query)
+    return await orchestrator.run_research(request)
 
 
 @router.post(

@@ -128,7 +128,7 @@ def create_app() -> FastAPI:
 
     # Mount Streamable MCP Server Starlette App for Remote Claude.ai integration
     mcp_server = OutmateMCPServer(settings=settings)
-    app.mount("/mcp", mcp_server.get_sse_app())
+    app.mount("/mcp", mcp_server.get_streamable_http_app())
 
     return app
 
