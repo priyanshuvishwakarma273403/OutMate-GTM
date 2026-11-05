@@ -290,6 +290,30 @@ class CompanyResearchService:
                         f"[SOURCE: {sr.url} | TITLE: {sr.title}]\n{sr.snippet}"
                     )
 
+        # Optional CRM Corroboration (Internal CRM Ground Truth)
+        if request.include_crm_context:
+            try:
+                from app.services.crm_service import get_crm_service
+
+                crm_service = get_crm_service()
+                crm_evidence = await crm_service.corroborate_research_with_crm(
+                    company_name=request.company_name,
+                    domain=target_domain,
+                    tenant_context=request.tenant_context,
+                )
+                if crm_evidence:
+                    logger.info(
+                        "Corroborated company research with %d CRM evidence records",
+                        len(crm_evidence),
+                    )
+                    collected_evidence.extend(crm_evidence)
+                    for ev in crm_evidence:
+                        extracted_contexts.append(
+                            f"[CRM EVIDENCE: {ev.source_url} | {ev.title}]\n{ev.snippet}"
+                        )
+            except Exception as exc:
+                logger.warning("CRM corroboration skipped during company research: %s", exc)
+
         # 6. Synthesize Factual Findings with LLM (Evidence-Constrained)
         combined_evidence_text = "\n\n---\n\n".join(extracted_contexts[:8])
 

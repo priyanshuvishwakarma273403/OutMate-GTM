@@ -178,9 +178,7 @@ class NangoClient:
                 logger.error("Network error fetching Nango connection: %s", exc)
                 raise NangoError(f"Network error contacting Nango: {exc}") from exc
 
-    async def list_connections(
-        self, connection_id: str | None = None
-    ) -> list[NangoConnection]:
+    async def list_connections(self, connection_id: str | None = None) -> list[NangoConnection]:
         """List active connections, optionally filtered by connection_id."""
         config = self._get_config()
         url = f"{config.base_url}/connection"
@@ -359,10 +357,16 @@ class NangoClient:
                     response.raise_for_status()
                     return response.json()  # type: ignore[no-any-return]
 
-                except (NangoExpiredConnectionError, NangoConnectionNotFoundError, NangoRateLimitError):
+                except (
+                    NangoExpiredConnectionError,
+                    NangoConnectionNotFoundError,
+                    NangoRateLimitError,
+                ):
                     raise
                 except httpx.HTTPStatusError as exc:
-                    logger.error("Nango proxy HTTP error: %s (status %d)", exc, exc.response.status_code)
+                    logger.error(
+                        "Nango proxy HTTP error: %s (status %d)", exc, exc.response.status_code
+                    )
                     raise NangoProxyError(
                         f"Third-party API request failed via Nango proxy: {exc}",
                         status_code=exc.response.status_code,

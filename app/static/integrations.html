@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outmate GTM — Integrations Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Official Nango Connect UI Frontend SDK -->
+  <script src="https://assets.nango.dev/connect-ui/index.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --border-focus: #374151;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.1);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.1);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.1);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 32px 16px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .provider-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-connected {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-disconnected {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-unconfigured {
+      background: var(--warning-bg);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      font-size: 13px;
+      margin: 16px 0 24px 0;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 16px;
+      border-radius: 6px;
+    }
+
+    .meta-item span.label {
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease-in-out;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    .btn-danger:hover {
+      background: var(--danger-bg);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .alert-error {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .alert-info {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Outmate GTM — Integrations Management</h1>
+      <p class="subtitle">Secure CRM connections mediated via Nango OAuth & Proxy. Strictly read-only.</p>
+    </header>
+
+    <div id="alert-box" class="alert"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="provider-title">
+          <span>HubSpot CRM</span>
+        </div>
+        <span id="hubspot-badge" class="badge badge-unconfigured">Loading...</span>
+      </div>
+
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">
+        Connect your HubSpot account to enrich Outmate GTM research with verified internal accounts, contacts, and opportunities.
+      </p>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="label">Provider Key</span>
+          <span id="meta-provider">hubspot</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Access Mode</span>
+          <span style="color: #60a5fa; font-weight: 500;">Strictly Read-Only</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Connection ID</span>
+          <span id="meta-cid">—</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Last Verified</span>
+          <span id="meta-verified">—</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btn-connect" class="btn-primary" onclick="startHubspotConnect()">Connect with HubSpot</button>
+        <button id="btn-reconnect" class="btn-secondary" style="display: none;" onclick="startHubspotConnect()">Reconnect</button>
+        <button id="btn-disconnect" class="btn-danger" style="display: none;" onclick="disconnectHubspot()">Disconnect</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let currentConnectionId = null;
+
+    function showAlert(message, type = 'error') {
+      const box = document.getElementById('alert-box');
+      box.textContent = message;
+      box.className = `alert alert-${type}`;
+      box.style.display = 'block';
+    }
+
+    async function loadStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/integrations/hubspot/status`);
+        const json = await res.json();
+        const data = json.data;
+
+        const badge = document.getElementById('hubspot-badge');
+        const metaCid = document.getElementById('meta-cid');
+        const metaVerified = document.getElementById('meta-verified');
+        const btnConnect = document.getElementById('btn-connect');
+        const btnReconnect = document.getElementById('btn-reconnect');
+        const btnDisconnect = document.getElementById('btn-disconnect');
+
+        currentConnectionId = data.connection_id;
+        metaCid.textContent = data.connection_id || 'None';
+
+        if (data.connected) {
+          badge.className = 'badge badge-connected';
+          badge.textContent = 'Connected';
+          metaVerified.textContent = new Date().toLocaleString();
+          btnConnect.style.display = 'none';
+          btnReconnect.style.display = 'inline-block';
+          btnDisconnect.style.display = 'inline-block';
+        } else {
+          badge.className = 'badge badge-disconnected';
+          badge.textContent = 'Not Connected';
+          metaVerified.textContent = '—';
+          btnConnect.style.display = 'inline-block';
+          btnReconnect.style.display = 'none';
+          btnDisconnect.style.display = 'none';
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert('Failed to contact Outmate GTM integrations API.');
+      }
+    }
+
+    async function startHubspotConnect() {
+      try {
+        showAlert('Initiating secure Nango Connect Session...', 'info');
+        const res = await fetch(`${API_BASE}/api/v1/integrations/hubspot/connect-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: 'default_user', organization_id: 'default_org' })
+        });
+        const json = await res.json();
+        if (!json.success) {
+          showAlert(json.error?.message || json.detail || 'Failed to start Connect Session');
+          return;
+        }
+
+        const session = json.data;
+        currentConnectionId = session.connection_id;
+
+        // Open Nango Connect UI with the session token
+        if (typeof Nango !== 'undefined') {
+          const nango = new Nango();
+          nango.openConnectUI({
+            connectSessionToken: session.token,
+            onEvent: async (event) => {
+              if (event.type === 'connect' || event.type === 'success') {
+                showAlert('Connection successful! Verifying server-side...', 'info');
+                await verifyConnection(session.connection_id);
+              }
+            }
+          });
+        } else {
+          showAlert('Nango Connect SDK could not be loaded. Please check your internet connection.');
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert('Error starting connection flow: ' + err.message);
+      }
+    }
+
+    async function verifyConnection(connectionId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/integrations/hubspot/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ connection_id: connectionId })
+        });
+        const json = await res.json();
+        if (json.success && json.data.connected) {
+          showAlert('HubSpot connected and verified successfully!', 'info');
+          loadStatus();
+        } else {
+          showAlert('Connection could not be verified by Nango: ' + (json.data.details || ''));
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert('Server-side verification error: ' + err.message);
+      }
+    }
+
+    async function disconnectHubspot() {
+      if (!currentConnectionId) return;
+      if (!confirm('Are you sure you want to disconnect HubSpot? Outmate GTM will no longer access your CRM data.')) {
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/integrations/hubspot/disconnect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ connection_id: currentConnectionId })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showAlert('HubSpot disconnected.', 'info');
+          loadStatus();
+        } else {
+          showAlert(json.detail || 'Disconnect failed');
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert('Disconnect error: ' + err.message);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadStatus);
+  </script>
+</body>
+</html>
+

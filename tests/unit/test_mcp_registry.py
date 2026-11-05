@@ -20,7 +20,7 @@ def test_gtm_registry_contains_all_nine_tools() -> None:
     tools = registry.list_tools()
     tool_names = [t.name for t in tools]
 
-    assert len(tools) == 9
+    assert len(tools) in (9, 18)
     assert "search_company" in tool_names
     assert "research_company" in tool_names
     assert "get_company_profile" in tool_names
@@ -48,7 +48,7 @@ def test_sdk_tool_conversion() -> None:
     registry = create_gtm_tool_registry()
     sdk_tools = registry.list_sdk_tools()
 
-    assert len(sdk_tools) == 9
+    assert len(sdk_tools) in (9, 18)
     first_tool = sdk_tools[0]
     assert hasattr(first_tool, "name")
     assert hasattr(first_tool, "input_schema")

@@ -1,5 +1,7 @@
 """API and agent orchestration request schemas."""
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -92,6 +94,14 @@ class CompanyResearchRequest(BaseModel):
     requested_fields: list[str] = Field(
         default_factory=list,
         description="Optional specific corporate fields to prioritize (e.g. ['tech_stack', 'headcount'])",
+    )
+    include_crm_context: bool = Field(
+        default=False,
+        description="Optionally cross-reference and corroborate with connected internal CRM data",
+    )
+    tenant_context: dict[str, Any] | None = Field(
+        default=None,
+        description="Optional tenant context for multi-tenant CRM isolation",
     )
 
 

@@ -42,6 +42,9 @@ class VerificationService:
 
         unique_domains: set[str] = set()
         has_official_source = False
+        has_crm_source = any(
+            ev.source_type == EvidenceSourceType.HUBSPOT_CRM for ev in supporting_evidence
+        )
         clean_target = extract_domain_from_url(f"https://{target_domain}") if target_domain else ""
 
         for ev in supporting_evidence:
@@ -54,6 +57,20 @@ class VerificationService:
                 or ev.source_type == EvidenceSourceType.OFFICIAL_WEBSITE
             ):
                 has_official_source = True
+
+        # Rule 0: Internal CRM verification (cross-corroborated or direct ground truth)
+        if has_crm_source:
+            if has_official_source or len(unique_domains) >= 2:
+                return (
+                    VerificationStatus.VERIFIED,
+                    0.98,
+                    "Corroborated across internal CRM records and independent public sources.",
+                )
+            return (
+                VerificationStatus.VERIFIED,
+                0.92,
+                "Directly substantiated by internal authorized CRM records.",
+            )
 
         # Rule 1: First-party official website evidence with or without third-party confirmation
         if has_official_source:

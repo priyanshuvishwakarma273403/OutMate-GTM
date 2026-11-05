@@ -51,7 +51,9 @@ class AppSettings(BaseSettings):
     nango_base_url: str = Field(default="https://api.nango.dev", alias="NANGO_BASE_URL")
     nango_connection_id: str | None = Field(default=None, alias="NANGO_CONNECTION_ID")
     nango_integration_id: str | None = Field(default=None, alias="NANGO_INTEGRATION_ID")
-    nango_integration_id_hubspot: str = Field(default="hubspot", alias="NANGO_INTEGRATION_ID_HUBSPOT")
+    nango_integration_id_hubspot: str = Field(
+        default="hubspot", alias="NANGO_INTEGRATION_ID_HUBSPOT"
+    )
     nango_connect_session_enabled: bool = Field(default=True, alias="NANGO_CONNECT_SESSION_ENABLED")
     nango_timeout: float = Field(default=30.0, alias="NANGO_TIMEOUT")
     hubspot_integration_enabled: bool = Field(default=True, alias="HUBSPOT_INTEGRATION_ENABLED")
@@ -63,7 +65,9 @@ class AppSettings(BaseSettings):
         default=30.0, alias="INTEGRATION_REQUEST_TIMEOUT_SECONDS"
     )
     integration_max_retries: int = Field(default=3, alias="INTEGRATION_MAX_RETRIES")
-    outmate_public_base_url: str = Field(default="http://localhost:8000", alias="OUTMATE_PUBLIC_BASE_URL")
+    outmate_public_base_url: str = Field(
+        default="http://localhost:8000", alias="OUTMATE_PUBLIC_BASE_URL"
+    )
     outmate_frontend_url: str = Field(default="http://localhost:3000", alias="OUTMATE_FRONTEND_URL")
 
     # Research / Search Provider Configuration

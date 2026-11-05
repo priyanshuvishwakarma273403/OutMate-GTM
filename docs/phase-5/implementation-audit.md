@@ -96,3 +96,4 @@ Outmate GTM provides AI-driven Go-To-Market research, company profiling, and dec
 2. **Read-Only Enforced:** No write operations to CRM under any circumstances.
 3. **No Secret Leaks:** `NANGO_SECRET_KEY` must never be sent to the frontend, included in HTTP responses, or written to logs.
 4. **Strict Typing & Quality:** 100% clean `ruff`, `mypy`, and `pytest`.
+

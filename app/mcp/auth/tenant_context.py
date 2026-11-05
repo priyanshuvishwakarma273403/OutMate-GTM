@@ -3,10 +3,22 @@
 from typing import Any
 
 from app.core.logging import get_logger
-from app.mcp.context import get_current_principal
+from app.mcp.context import get_current_principal, set_current_principal
 from app.mcp.errors import MCPAuthorizationError
 
 logger = get_logger("mcp.auth.tenant_context")
+
+
+def get_current_tenant() -> str:
+    """Retrieve current tenant_id from active principal context."""
+    return get_current_principal().tenant_id
+
+
+def set_current_tenant(tenant_id: str) -> None:
+    """Set the tenant_id on active principal context."""
+    principal = get_current_principal()
+    principal.tenant_id = tenant_id
+    set_current_principal(principal)
 
 
 def validate_tenant_access(resource_metadata: dict[str, Any] | None, resource_id: str) -> None:

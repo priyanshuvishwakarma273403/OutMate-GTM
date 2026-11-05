@@ -47,3 +47,4 @@ class NangoProxyError(NangoError):
 
 class CRMReadOnlyError(OutmateError):
     """Raised when an operation attempts to write, mutate, or delete CRM records."""
+

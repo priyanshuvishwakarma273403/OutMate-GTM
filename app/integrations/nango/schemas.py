@@ -22,7 +22,9 @@ class NangoConnection(BaseModel):
     provider_config_key: str = Field(
         ..., description="Identifier for integration provider (e.g. 'hubspot')"
     )
-    created: str | None = Field(default=None, description="ISO timestamp when connection was created")
+    created: str | None = Field(
+        default=None, description="ISO timestamp when connection was created"
+    )
     updated: str | None = Field(
         default=None, description="ISO timestamp when connection was last updated"
     )
@@ -36,8 +38,12 @@ class NangoConnectionStatus(BaseModel):
 
     connection_id: str = Field(..., description="Unique tenant or user identifier")
     integration_id: str = Field(..., description="Target integration provider key")
-    connected: bool = Field(..., description="Whether connection is currently active and authorized")
-    status: str = Field(..., description="Status string: 'connected', 'not_found', 'expired', 'error'")
+    connected: bool = Field(
+        ..., description="Whether connection is currently active and authorized"
+    )
+    status: str = Field(
+        ..., description="Status string: 'connected', 'not_found', 'expired', 'error'"
+    )
     provider: str = Field(..., description="Target integration provider name")
     metadata: dict[str, Any] = Field(
         default_factory=dict, description="Provider connection metadata"

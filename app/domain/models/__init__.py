@@ -5,6 +5,13 @@ from app.domain.models.company import (
     CompanyProfile,
     IndustryCategory,
 )
+from app.domain.models.crm import (
+    CRMAssociation,
+    CRMCompany,
+    CRMContact,
+    CRMContextSummary,
+    CRMDeal,
+)
 from app.domain.models.evidence import (
     EvidenceRecord,
     EvidenceSourceType,
@@ -30,6 +37,11 @@ from app.domain.models.report import (
 )
 
 __all__ = [
+    "CRMAssociation",
+    "CRMCompany",
+    "CRMContact",
+    "CRMContextSummary",
+    "CRMDeal",
     "CompanyFundingStage",
     "CompanyProfile",
     "ContactCoordinates",

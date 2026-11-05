@@ -2,14 +2,17 @@
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
+from app.api.routes.crm import router as crm_router
 from app.api.routes.decision_makers import router as decision_makers_router
 from app.api.routes.health import router as health_router
+from app.api.routes.integrations import router as integrations_router
 from app.api.routes.llm import router as llm_router
 from app.api.routes.research import router as research_router
 from app.core.config import get_settings
@@ -125,6 +128,14 @@ def create_app() -> FastAPI:
     app.include_router(llm_router)
     app.include_router(research_router)
     app.include_router(decision_makers_router)
+    app.include_router(integrations_router)
+    app.include_router(crm_router)
+
+    # Integration Management UI
+    @app.get("/integrations", include_in_schema=False)
+    async def get_integrations_page() -> FileResponse:
+        static_file = Path(__file__).parent / "static" / "integrations.html"
+        return FileResponse(static_file)
 
     # Mount Streamable MCP Server Starlette App for Remote Claude.ai integration
     mcp_server = OutmateMCPServer(settings=settings)
